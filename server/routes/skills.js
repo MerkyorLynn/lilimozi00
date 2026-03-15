@@ -8,7 +8,7 @@
  */
 import path from "path";
 import fs from "fs";
-import { execFileSync } from "child_process";
+import { extractZip } from "../../lib/extract-zip.js";
 import { saveConfig } from "../../lib/memory/config-loader.js";
 import { sanitizeSkillName, safetyReview } from "../../lib/tools/install-skill.js";
 
@@ -130,7 +130,7 @@ export default async function skillsRoute(app, { engine }) {
         const tmpDir = path.join(userDir, ".tmp-install-" + Date.now());
         fs.mkdirSync(tmpDir, { recursive: true });
         try {
-          execFileSync("unzip", ["-o", "-q", srcPath, "-d", tmpDir]);
+          extractZip(srcPath, tmpDir);
 
           // 找到 SKILL.md：可能在根目录或一层子目录内
           if (fs.existsSync(path.join(tmpDir, "SKILL.md"))) {

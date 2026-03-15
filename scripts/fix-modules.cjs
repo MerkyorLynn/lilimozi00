@@ -11,8 +11,11 @@ const fs = require("fs");
 const path = require("path");
 
 exports.default = async function (context) {
-  const appDir = path.join(context.appOutDir, context.packager.appInfo.productFilename + ".app",
-    "Contents", "Resources", "app");
+  const platformName = context.packager.platform.name;
+  const appDir = platformName === "mac"
+    ? path.join(context.appOutDir, context.packager.appInfo.productFilename + ".app",
+        "Contents", "Resources", "app")
+    : path.join(context.appOutDir, "resources", "app");
   const distModules = path.join(appDir, "node_modules");
   const localModules = path.resolve(__dirname, "..", "node_modules");
 
@@ -21,9 +24,10 @@ exports.default = async function (context) {
   // 获取生产依赖树
   let prodDeps;
   try {
-    const raw = execSync("npm ls --all --json --omit=dev 2>/dev/null", {
+    const raw = execSync("npm ls --all --json --omit=dev", {
       cwd: path.resolve(__dirname, ".."),
       maxBuffer: 20 * 1024 * 1024,
+      stdio: ["pipe", "pipe", "pipe"],
     });
     prodDeps = JSON.parse(raw);
   } catch (e) {

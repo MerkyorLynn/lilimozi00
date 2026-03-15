@@ -17,6 +17,7 @@ handoff-*.md
 # ═══════════════════════════════════════════
 dist/
 desktop/dist-renderer/
+vendor/
 inbox/
 
 # 运行时 / 依赖

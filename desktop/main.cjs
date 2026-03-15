@@ -1472,7 +1472,14 @@ ipcMain.handle("open-skill-viewer", (_event, data) => {
         const { execFileSync } = require("child_process");
         const tmpDir = path.join(app.getPath("temp"), "hana-skill-preview-" + Date.now());
         fs.mkdirSync(tmpDir, { recursive: true });
-        execFileSync("unzip", ["-o", "-q", data.skillPath, "-d", tmpDir]);
+        if (process.platform === "win32") {
+          execFileSync("powershell.exe", [
+            "-NoProfile", "-NonInteractive", "-Command",
+            `Expand-Archive -Path '${data.skillPath.replace(/'/g, "''")}' -DestinationPath '${tmpDir.replace(/'/g, "''")}' -Force`,
+          ], { stdio: "ignore", windowsHide: true });
+        } else {
+          execFileSync("unzip", ["-o", "-q", data.skillPath, "-d", tmpDir]);
+        }
 
         let skillDir = null;
         if (fs.existsSync(path.join(tmpDir, "SKILL.md"))) {
