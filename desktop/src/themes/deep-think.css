@@ -1,6 +1,6 @@
 /*
  * Hana Theme: Deep Think
- * DeepSeek 配色致敬 — 干净白底 + 克制的电光蓝点缀
+ * DeepSeek 配色致敬 — 干净白底 + 克制的蓝紫点缀
  */
 
 [data-theme="deep-think"] {
@@ -9,10 +9,10 @@
     --bg-card:      #F8F8FA;
     --bg-glass:     rgba(252, 252, 253, 0.92);
 
-    /* 主色调（DeepSeek 蓝，克制使用） */
-    --accent:       #4D6BFE;
-    --accent-hover: #3D5AE8;
-    --accent-light: rgba(77, 107, 254, 0.06);
+    /* 主色调（DeepSeek 蓝紫，克制使用） */
+    --accent:       #636AE8;
+    --accent-hover: #5158D4;
+    --accent-light: rgba(99, 106, 232, 0.06);
 
     /* 文字 */
     --text:         #1D1D1F;
@@ -37,9 +37,9 @@
 
     /* 聊天专用 */
     --hana-text:    #1D1D1F;
-    --mood-bg:      rgba(77, 107, 254, 0.04);
-    --mood-text:    #4D6BFE;
-    --mood-border:  rgba(77, 107, 254, 0.14);
+    --mood-bg:      rgba(99, 106, 232, 0.04);
+    --mood-text:    #5158D4;
+    --mood-border:  rgba(99, 106, 232, 0.14);
     --tool-bg:      rgba(0, 0, 0, 0.03);
     --tool-text:    #65656B;
     --user-bg:      rgba(0, 0, 0, 0.035);
@@ -47,7 +47,7 @@
     --attach-bg:    rgba(0, 0, 0, 0.04);
 
     /* 辅助色 */
-    --accent-rgb:   77, 107, 254;
+    --accent-rgb:   99, 106, 232;
     --coral-rgb:    217, 116, 108;
     --danger:       #8B3A3A;
     --danger-rgb:   139, 58, 58;

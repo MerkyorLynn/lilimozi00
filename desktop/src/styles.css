@@ -5780,7 +5780,7 @@ body.resizing .jian-sidebar-inner {
 }
 
 .theme-card[data-theme="delve"] .theme-card-mode {
-    color: #74AA9C;
+    color: #1A1A1A;
 }
 
 /* Deep Think：DeepSeek 白底 + 电光蓝 */
@@ -5793,7 +5793,7 @@ body.resizing .jian-sidebar-inner {
 }
 
 .theme-card[data-theme="deep-think"] .theme-card-mode {
-    color: #4D6BFE;
+    color: #636AE8;
 }
 
 /* 自动：左暖纸右蓝调，硬拼色 */

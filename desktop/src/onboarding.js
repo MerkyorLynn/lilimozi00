@@ -532,7 +532,7 @@ async function saveModel() {
 
 // ── Theme grid 渲染 ──
 
-const OB_THEMES = ['warm-paper', 'midnight', 'high-contrast', 'grass-aroma', 'contemplation', 'absolutely', 'delve', 'deep-think', 'auto'];
+const OB_THEMES = ['warm-paper', 'midnight', 'auto', 'high-contrast', 'grass-aroma', 'contemplation', 'absolutely', 'delve', 'deep-think'];
 
 // kebab-case → camelCase，i18n key 遵循 settings.appearance.{camelCase} 约定
 function _themeKey(id) { return id.replace(/-([a-z])/g, (_, c) => c.toUpperCase()); }

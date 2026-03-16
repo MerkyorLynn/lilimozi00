@@ -1,6 +1,6 @@
 /*
  * Hana Theme: Delve
- * ChatGPT 配色致敬 — 冷调纯白 + 哑光绿 accent
+ * ChatGPT 配色致敬 — 冷调纯白 + 纯黑高对比
  */
 
 [data-theme="delve"] {
@@ -9,10 +9,10 @@
     --bg-card:      #F7F7F8;
     --bg-glass:     rgba(255, 255, 255, 0.92);
 
-    /* 主色调（ChatGPT 哑光绿） */
-    --accent:       #74AA9C;
-    --accent-hover: #629286;
-    --accent-light: rgba(116, 170, 156, 0.08);
+    /* 主色调（纯黑） */
+    --accent:       #1A1A1A;
+    --accent-hover: #000000;
+    --accent-light: rgba(0, 0, 0, 0.05);
 
     /* 文字 */
     --text:         #1A1A1A;
@@ -24,8 +24,8 @@
     --shadow:       rgba(0, 0, 0, 0.06);
 
     /* 状态色 */
-    --green:        #74AA9C;
-    --green-rgb:    116, 170, 156;
+    --green:        #5CB85C;
+    --green-rgb:    92, 184, 92;
     --coral:        #D9746C;
 
     /* 侧边栏 */
@@ -37,9 +37,9 @@
 
     /* 聊天专用 */
     --hana-text:    #1A1A1A;
-    --mood-bg:      rgba(116, 170, 156, 0.05);
-    --mood-text:    #4E8577;
-    --mood-border:  rgba(116, 170, 156, 0.18);
+    --mood-bg:      rgba(0, 0, 0, 0.03);
+    --mood-text:    #4A4A4A;
+    --mood-border:  rgba(0, 0, 0, 0.12);
     --tool-bg:      rgba(0, 0, 0, 0.03);
     --tool-text:    #6E6E6E;
     --user-bg:      rgba(0, 0, 0, 0.035);
@@ -47,7 +47,7 @@
     --attach-bg:    rgba(0, 0, 0, 0.04);
 
     /* 辅助色 */
-    --accent-rgb:   116, 170, 156;
+    --accent-rgb:   26, 26, 26;
     --coral-rgb:    217, 116, 108;
     --danger:       #8B3A3A;
     --danger-rgb:   139, 58, 58;

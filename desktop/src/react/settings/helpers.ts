@@ -197,4 +197,4 @@ export const OUTPUT_PRESETS = [
   { label: '64K', value: 65536 },
 ];
 
-export const VALID_THEMES = ['warm-paper', 'midnight', 'high-contrast', 'grass-aroma', 'contemplation', 'absolutely', 'delve', 'deep-think', 'auto'];
+export const VALID_THEMES = ['warm-paper', 'midnight', 'auto', 'high-contrast', 'grass-aroma', 'contemplation', 'absolutely', 'delve', 'deep-think'];
