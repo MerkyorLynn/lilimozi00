@@ -5,7 +5,7 @@
  * 所有初始化逻辑从 app.js / bridge.ts 迁移至此。
  */
 
-import { useEffect } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { useStore } from './stores';
 import { hanaFetch } from './hooks/use-hana-fetch';
 import { ErrorBoundary } from './components/ErrorBoundary';
@@ -357,6 +357,7 @@ function App() {
             <line x1="15" y1="3" x2="15" y2="21"></line>
           </svg>
         </button>
+        <WindowControls />
       </div>
 
       {/* ── App body ── */}
@@ -558,6 +559,50 @@ function App() {
         <ChannelCreate />
       </div>
     </ErrorBoundary>
+  );
+}
+
+// ── Windows/Linux 窗口控制按钮 ──
+
+function WindowControls() {
+  const [isWin, setIsWin] = useState(false);
+  const [maximized, setMaximized] = useState(false);
+
+  useEffect(() => {
+    const p = window.platform;
+    if (!p?.getPlatform) return;
+    p.getPlatform().then((plat: string) => {
+      if (plat !== 'darwin' && plat !== 'web') setIsWin(true);
+    });
+    if (p.onMaximizeChange) {
+      p.onMaximizeChange((val: boolean) => setMaximized(val));
+    }
+    p.windowIsMaximized?.().then((val: boolean) => setMaximized(val));
+  }, []);
+
+  const minimize = useCallback(() => window.platform?.windowMinimize(), []);
+  const maximize = useCallback(() => window.platform?.windowMaximize(), []);
+  const close = useCallback(() => window.platform?.windowClose(), []);
+
+  if (!isWin) return null;
+
+  return (
+    <div className="window-controls">
+      <button className="wc-btn wc-minimize" title="最小化" onClick={minimize}>
+        <svg width="12" height="12" viewBox="0 0 12 12"><line x1="2" y1="6" x2="10" y2="6" stroke="currentColor" strokeWidth="1"/></svg>
+      </button>
+      <button className="wc-btn wc-maximize" title="最大化" onClick={maximize}>
+        <svg width="12" height="12" viewBox="0 0 12 12">
+          {maximized
+            ? <><rect x="3" y="1" width="7" height="7" fill="none" stroke="currentColor" strokeWidth="1"/><rect x="1" y="3" width="7" height="7" fill="none" stroke="currentColor" strokeWidth="1"/></>
+            : <rect x="2" y="2" width="8" height="8" fill="none" stroke="currentColor" strokeWidth="1"/>
+          }
+        </svg>
+      </button>
+      <button className="wc-btn wc-close" title="关闭" onClick={close}>
+        <svg width="12" height="12" viewBox="0 0 12 12"><line x1="2" y1="2" x2="10" y2="10" stroke="currentColor" strokeWidth="1"/><line x1="10" y1="2" x2="2" y2="10" stroke="currentColor" strokeWidth="1"/></svg>
+      </button>
+    </div>
   );
 }
 
