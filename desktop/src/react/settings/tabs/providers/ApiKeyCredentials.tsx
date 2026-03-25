@@ -22,12 +22,12 @@ export function ApiKeyCredentials({ providerId, summary, providerConfig, isPrese
   const baseUrl = summary.base_url || presetInfo?.url || '';
   const api = summary.api || presetInfo?.api || '';
 
-  // 未编辑时，从 summary 同步遮掩值到输入框（让用户看到"已保存"）
+  // 未编辑时，从 summary 同步已保存的 key 到输入框
   useEffect(() => {
-    if (!keyEdited && summary.api_key_masked) {
-      setKeyVal(summary.api_key_masked);
+    if (!keyEdited && summary.api_key) {
+      setKeyVal(summary.api_key);
     }
-  }, [summary.api_key_masked, keyEdited]);
+  }, [summary.api_key, keyEdited]);
 
   const verifyAndSave = async (btn: HTMLButtonElement) => {
     if (!keyEdited) return;

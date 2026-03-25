@@ -6,11 +6,6 @@ import { safeJson } from "../hono-helpers.js";
 import { getAllProviders } from "../../lib/memory/config-loader.js";
 import { buildProviderAuthHeaders, buildProbeUrl } from "../../lib/llm/provider-client.js";
 
-function maskKey(key) {
-  if (!key || key.length < 8) return key ? "***" : "";
-  return key.slice(0, 4) + "..." + key.slice(-4);
-}
-
 export function createProvidersRoute(engine) {
   const route = new Hono();
 
@@ -107,7 +102,7 @@ export function createProvidersRoute(engine) {
         display_name: oauthInfo?.name || name,
         base_url: p.base_url || "",
         api: p.api || "",
-        api_key_masked: p.api_key ? maskKey(p.api_key) : "",
+        api_key: p.api_key || "",
         models: allModels,
         custom_models: customModels,
         has_credentials: !!(p.api_key || (isOAuth && oauthInfo?.loggedIn)),
@@ -130,7 +125,7 @@ export function createProvidersRoute(engine) {
         display_name: info.name || id,
         base_url: "",
         api: "",
-        api_key_masked: "",
+        api_key: "",
         models: sdkIds,
         custom_models: customModels,
         has_credentials: !!info.loggedIn,
@@ -152,7 +147,7 @@ export function createProvidersRoute(engine) {
           display_name: entry.displayName || id,
           base_url: entry.baseUrl || "",
           api: entry.api || "",
-          api_key_masked: "",
+          api_key: "",
           models: sdkIds,
           custom_models: [],
           has_credentials: false,

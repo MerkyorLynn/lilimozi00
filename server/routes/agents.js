@@ -48,11 +48,7 @@ function isActiveAgent(engine, id) {
   return id === engine.currentAgentId;
 }
 
-function mask(key) {
-  if (!key) return "";
-  if (key.length < 8) return "****";
-  return key.slice(0, 4) + "..." + key.slice(-4);
-}
+// 本地应用，API key 不做掩码，前端用 type="password" 控制显隐
 
 export function createAgentsRoute(engine) {
   const route = new Hono();
@@ -224,11 +220,7 @@ export function createAgentsRoute(engine) {
       // 直接解析 YAML，不走 loadConfig 全局缓存
       const config = YAML.load(await fs.readFile(configPath, "utf-8")) || {};
 
-      // 脱敏 API key
-      if (config.api) config.api = { ...config.api, api_key: mask(config.api.api_key) };
-      if (config.embedding_api) config.embedding_api = { ...config.embedding_api, api_key: mask(config.embedding_api.api_key) };
-      if (config.utility_api) config.utility_api = { ...config.utility_api, api_key: mask(config.utility_api.api_key) };
-      if (config.search) config.search = { ...config.search, api_key: mask(config.search?.api_key) };
+      // API key 不做掩码（本地应用，前端用 type="password" 控制显隐）
 
       // 附带 raw 结构
       config._raw = {
@@ -243,17 +235,17 @@ export function createAgentsRoute(engine) {
       // 供应商列表
       try {
         const providers = getAllProviders(configPath);
-        const maskedProviders = {};
+        const providerEntries = {};
         for (const [name, p] of Object.entries(providers)) {
-          maskedProviders[name] = {
+          providerEntries[name] = {
             base_url: p.base_url || "",
             api: p.api || "",
-            api_key: mask(p.api_key),
+            api_key: p.api_key || "",
             models: p.models || [],
             model_count: (p.models || []).length,
           };
         }
-        config.providers = maskedProviders;
+        config.providers = providerEntries;
       } catch {
         config.providers = {};
       }

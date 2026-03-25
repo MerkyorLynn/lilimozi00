@@ -12,12 +12,6 @@ import { debugLog } from "../../lib/debug-log.js";
 export function createPreferencesRoute(engine) {
   const route = new Hono();
 
-  const mask = (key) => {
-    if (!key) return "";
-    if (key.length < 8) return "****";
-    return key.slice(0, 4) + "..." + key.slice(-4);
-  };
-
   // 读取全局模型 + 搜索配置
   route.get("/preferences/models", async (c) => {
     try {
@@ -29,12 +23,12 @@ export function createPreferencesRoute(engine) {
         models,
         search: {
           provider: search.provider || "",
-          api_key: mask(search.api_key),
+          api_key: search.api_key || "",
         },
         utility_api: {
           provider: utilityApi.provider || "",
           base_url: utilityApi.base_url || "",
-          api_key: mask(utilityApi.api_key),
+          api_key: utilityApi.api_key || "",
         },
       });
     } catch (err) {

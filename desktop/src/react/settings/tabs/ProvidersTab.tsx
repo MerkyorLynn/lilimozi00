@@ -115,7 +115,7 @@ export function ProvidersTab() {
               display_name: preset?.label || selected,
               base_url: preset?.url || '',
               api: preset?.api || '',
-              api_key_masked: '',
+              api_key: '',
               models: [],
               custom_models: [],
               has_credentials: false,

@@ -21,24 +21,7 @@ export function createConfigRoute(engine) {
       const config = { ...engine.config };
       const raw = getRawConfig(engine.configPath) || {};
 
-      // 脱敏 API key
-      const mask = (key) => {
-        if (!key || key.length < 8) return key ? "****" : "";
-        return key.slice(0, 4) + "..." + key.slice(-4);
-      };
-
-      if (config.api) {
-        config.api = { ...config.api, api_key: mask(config.api.api_key) };
-      }
-      if (config.embedding_api) {
-        config.embedding_api = { ...config.embedding_api, api_key: mask(config.embedding_api.api_key) };
-      }
-      if (config.utility_api) {
-        config.utility_api = { ...config.utility_api, api_key: mask(config.utility_api.api_key) };
-      }
-      if (config.search) {
-        config.search = { ...config.search, api_key: mask(config.search?.api_key) };
-      }
+      // 本地应用，直接返回完整 key（前端用 type="password" 控制显隐）
 
       // 附带原始配置结构（未经 fallback 解析，让前端知道用户显式设了什么）
       config._raw = {
@@ -47,19 +30,19 @@ export function createConfigRoute(engine) {
         utility_api: { provider: raw.utility_api?.provider || "", base_url: raw.utility_api?.base_url || "" },
       };
 
-      // 供应商列表（脱敏 api_key，附带 model_count）
+      // 供应商列表（附带 model_count）
       const providers = getAllProviders(engine.configPath);
-      const maskedProviders = {};
+      const providerEntries = {};
       for (const [name, p] of Object.entries(providers)) {
-        maskedProviders[name] = {
+        providerEntries[name] = {
           base_url: p.base_url || "",
           api: p.api || "",
-          api_key: mask(p.api_key),
+          api_key: p.api_key || "",
           models: p.models || [],
           model_count: (p.models || []).length,
         };
       }
-      config.providers = maskedProviders;
+      config.providers = providerEntries;
 
       // 自动注入全局字段（schema-driven）
       injectGlobalFields(config, engine);

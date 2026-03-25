@@ -29,7 +29,7 @@ export interface ProviderSummary {
   display_name: string;
   base_url: string;
   api: string;
-  api_key_masked: string;
+  api_key: string;
   models: string[];
   custom_models: string[];
   has_credentials: boolean;
