@@ -253,7 +253,7 @@ describe("模型选择无 fallback", () => {
     function setupRouter(mm) {
       mm.executionRouter = new ExecutionRouter(
         (ref) => mm._availableModels.find((m) => m.id === ref),
-        { get: (provider) => {
+        { getCredentials: (provider) => {
           // 从 _availableModels 的 provider 对应的凭证中查找
           const model = mm._availableModels.find((m) => m.provider === provider);
           if (!model?._cred) return null;
