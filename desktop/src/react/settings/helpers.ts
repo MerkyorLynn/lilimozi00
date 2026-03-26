@@ -7,45 +7,6 @@ import knownModels from '../../../../lib/known-models.json';
 
 const platform = window.platform;
 
-/** Internal format: "provider:modelId" */
-export function favKey(provider: string, modelId: string): string {
-  return `${provider}:${modelId}`;
-}
-
-/** Parse internal format back to {provider, id} */
-export function parseFavKey(key: string): { provider: string; id: string } {
-  const idx = key.indexOf(':');
-  if (idx === -1) return { provider: '', id: key };
-  return { provider: key.slice(0, idx), id: key.slice(idx + 1) };
-}
-
-/** Serialize pendingFavorites Set for API */
-export function serializeFavorites(favSet: Set<string>): Array<string | { id: string; provider: string }> {
-  return [...favSet].map(key => {
-    const { provider, id } = parseFavKey(key);
-    if (provider) return { id, provider };
-    return id;
-  });
-}
-
-/** Deserialize API favorites into Set<"provider:id"> */
-export function deserializeFavorites(
-  raw: Array<string | { id: string; provider: string }>,
-  resolveProvider?: (id: string) => string | null,
-): Set<string> {
-  const set = new Set<string>();
-  for (const item of raw) {
-    if (typeof item === 'object' && item && item.id && item.provider) {
-      set.add(favKey(item.provider, item.id));
-    } else if (typeof item === 'string') {
-      // 旧格式：尝试通过 resolveProvider 附加 provider
-      const prov = resolveProvider?.(item);
-      set.add(prov ? favKey(prov, item) : item);
-    }
-  }
-  return set;
-}
-
 export function t(key: string, params?: Record<string, any>): any {
   return window.t?.(key, params) ?? key;
 }
@@ -159,25 +120,6 @@ export async function autoSaveGlobalModels(
   } catch (err: any) {
     store.showToast(t('settings.saveFailed') + ': ' + err.message, 'error');
   }
-}
-
-let _saveFavTimer: ReturnType<typeof setTimeout> | null = null;
-export function autoSaveModels() {
-  if (_saveFavTimer) clearTimeout(_saveFavTimer);
-  _saveFavTimer = setTimeout(async () => {
-    const store = useSettingsStore.getState();
-    try {
-      await hanaFetch('/api/favorites', {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ favorites: serializeFavorites(store.pendingFavorites) }),
-      });
-      store.showToast(t('settings.autoSaved'), 'success');
-      platform?.settingsChanged?.('models-changed');
-    } catch (err: any) {
-      store.showToast(t('settings.saveFailed') + ': ' + err.message, 'error');
-    }
-  }, 300);
 }
 
 let _savePinsTimer: ReturnType<typeof setTimeout> | null = null;

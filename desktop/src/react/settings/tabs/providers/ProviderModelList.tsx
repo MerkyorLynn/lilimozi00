@@ -1,10 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useSettingsStore, type ProviderSummary } from '../../store';
 import { hanaFetch } from '../../api';
-import {
-  t, formatContext, lookupModelMeta, favKey, parseFavKey,
-  autoSaveConfig, autoSaveModels,
-} from '../../helpers';
+import { t, formatContext, lookupModelMeta } from '../../helpers';
 import { ModelEditPanel } from './ModelEditPanel';
 import styles from '../../Settings.module.css';
 
@@ -15,42 +12,45 @@ export function ProviderModelList({ providerId, summary, onRefresh }: {
   summary: ProviderSummary;
   onRefresh: () => Promise<void>;
 }) {
-  const { pendingFavorites, pendingDefaultModel, showToast } = useSettingsStore();
+  const { showToast } = useSettingsStore();
   const [search, setSearch] = useState('');
   const [customInput, setCustomInput] = useState('');
 
-  const allModels = [...new Set([...(summary.models || []), ...(summary.custom_models || [])])];
+  const currentModels = summary.models || [];
+  const allModels = [...new Set([...currentModels, ...(summary.custom_models || [])])];
   const query = search.toLowerCase();
   const filtered = query ? allModels.filter(m => m.toLowerCase().includes(query)) : allModels;
 
-  const toggleFavorite = (mid: string) => {
-    const key = favKey(providerId, mid);
-    const next = new Set(pendingFavorites);
-    if (next.has(key)) {
-      next.delete(key);
-      let nextDefault = pendingDefaultModel;
-      if (key === pendingDefaultModel) {
-        const firstRemaining = [...next][0] || '';
-        nextDefault = firstRemaining;
-        const { provider: p, id } = parseFavKey(firstRemaining);
-        const partial: Record<string, unknown> = { models: { chat: id || '' } };
-        if (p) partial.api = { provider: p };
-        autoSaveConfig(partial, { refreshModels: true });
-      }
-      useSettingsStore.setState({ pendingFavorites: next, pendingDefaultModel: nextDefault });
-    } else {
-      next.add(key);
-      const wasEmpty = pendingFavorites.size === 0;
-      const updates: Record<string, unknown> = { pendingFavorites: next };
-      if (wasEmpty) {
-        (updates as Record<string, unknown>).pendingDefaultModel = key;
-        const partial: Record<string, unknown> = { models: { chat: mid } };
-        (partial as Record<string, unknown>).api = { provider: providerId };
-        autoSaveConfig(partial, { refreshModels: true });
-      }
-      useSettingsStore.setState(updates as Partial<ReturnType<typeof useSettingsStore.getState>>);
+  const addModelToProvider = async (mid: string) => {
+    if (currentModels.includes(mid)) return;
+    try {
+      await hanaFetch('/api/config', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ providers: { [providerId]: { models: [...currentModels, mid] } } }),
+      });
+      await onRefresh();
+      platform?.settingsChanged?.('models-changed');
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : String(err);
+      showToast(msg, 'error');
     }
-    autoSaveModels();
+  };
+
+  const removeModelFromProvider = async (mid: string) => {
+    try {
+      const next = currentModels.filter(m => m !== mid);
+      await hanaFetch('/api/config', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ providers: { [providerId]: { models: next } } }),
+      });
+      await onRefresh();
+      platform?.settingsChanged?.('models-changed');
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : String(err);
+      showToast(msg, 'error');
+    }
   };
 
   const addCustomModel = async () => {
@@ -66,7 +66,6 @@ export function ProviderModelList({ providerId, summary, onRefresh }: {
         const data = await res.json();
         if (data.error) throw new Error(data.error);
       } else {
-        const currentModels = summary.models || [];
         await hanaFetch('/api/config', {
           method: 'PUT',
           headers: { 'Content-Type': 'application/json' },
@@ -132,7 +131,8 @@ export function ProviderModelList({ providerId, summary, onRefresh }: {
       position: 'fixed',
       left: Math.max(8, left),
       width: w,
-      bottom: window.innerHeight - rect.top + 4,
+      top: rect.bottom + 4,
+      maxHeight: window.innerHeight - rect.bottom - 12,
       zIndex: 9999,
     });
   }, [dropdownOpen]);
@@ -149,8 +149,53 @@ export function ProviderModelList({ providerId, summary, onRefresh }: {
     return () => document.removeEventListener('mousedown', handler);
   }, [dropdownOpen]);
 
+  const [editing, setEditing] = useState<{ id: string; anchor: HTMLElement } | null>(null);
+
   return (
     <div className={styles['pv-models']}>
+      {/* Added models list */}
+      {currentModels.length > 0 && (
+        <div className={styles['pv-fav-section']}>
+          <div className={styles['pv-fav-title']}>
+            {t('settings.api.addedModels')}
+            <span className={styles['pv-models-count']}>{currentModels.length}</span>
+          </div>
+          <div className={styles['pv-fav-list']}>
+            {currentModels.map(mid => {
+              const meta = lookupModelMeta(mid) || {};
+              return (
+                <div key={mid} className={styles['pv-fav-item']}>
+                  <span className={styles['pv-fav-item-name']} title={mid}>{meta.displayName || meta.name || mid}</span>
+                  {(meta.displayName || meta.name) && meta.displayName !== mid && meta.name !== mid && <span className={styles['pv-fav-item-id']}>{mid}</span>}
+                  {meta.context && <span className={styles['pv-model-ctx']}>{formatContext(meta.context)}</span>}
+                  <div className={styles['pv-fav-item-actions']}>
+                    <button
+                      className={styles['pv-fav-item-edit']}
+                      title={t('settings.api.editModel')}
+                      onClick={(e) => setEditing({ id: mid, anchor: e.currentTarget })}
+                    >
+                      <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                        <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
+                        <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
+                      </svg>
+                    </button>
+                    <button className={styles['pv-fav-item-remove']} onClick={() => removeModelFromProvider(mid)} title={t('settings.api.removeModel')}>
+                      <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" />
+                      </svg>
+                    </button>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+          {editing && (
+            <ModelEditPanel modelId={editing.id} anchorEl={editing.anchor} onClose={() => setEditing(null)} />
+          )}
+        </div>
+      )}
+
+      {/* Add model dropdown + fetch button */}
       <div className={styles['pv-models-action-row']}>
         <button ref={triggerRef} className={styles['pv-model-dropdown-trigger']} onClick={() => setDropdownOpen(!dropdownOpen)}>
           <span>{t('settings.api.addModel')}</span>
@@ -183,16 +228,16 @@ export function ProviderModelList({ providerId, summary, onRefresh }: {
             />
             <div className={styles['pv-model-dropdown-list']}>
               {filtered.map(mid => {
-                const isFav = pendingFavorites.has(favKey(providerId, mid));
+                const isAdded = currentModels.includes(mid);
                 const meta = lookupModelMeta(mid) || {};
                 return (
                   <button
                     key={mid}
-                    className={`${styles['pv-model-dropdown-option']}${isFav  ? ' ' + styles['added'] : ''}`}
-                    onClick={() => { if (!isFav) { toggleFavorite(mid); } }}
+                    className={`${styles['pv-model-dropdown-option']}${isAdded  ? ' ' + styles['added'] : ''}`}
+                    onClick={() => { if (!isAdded) { addModelToProvider(mid); } }}
                   >
                     <span className={styles['pv-model-dropdown-option-name']}>{mid}</span>
-                    {isFav && <span className={styles['pv-model-dropdown-option-check']}>{'\u2713'}</span>}
+                    {isAdded && <span className={styles['pv-model-dropdown-option-check']}>{'\u2713'}</span>}
                     {meta.context && <span className={styles['pv-model-ctx']}>{formatContext(meta.context)}</span>}
                   </button>
                 );

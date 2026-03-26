@@ -3,7 +3,7 @@
  */
 import { useSettingsStore } from './store';
 import { hanaFetch, hanaUrl } from './api';
-import { t, deserializeFavorites } from './helpers';
+import { t } from './helpers';
 
 const platform = window.platform;
 
@@ -82,36 +82,11 @@ export async function loadSettingsConfig() {
     const experienceData = await experienceRes.json();
     config._experience = experienceData.content || '';
 
-    // 旧格式裸 ID 的 provider 反查（用已加载的 config.providers）
-    const providerLookup = (id: string): string | null => {
-      for (const [name, p] of Object.entries(config.providers || {}) as [string, any][]) {
-        if ((p.models || []).includes(id)) return name;
-      }
-      return null;
-    };
-
-    // favorites
-    try {
-      const favRes = await hanaFetch('/api/favorites');
-      const favData = await favRes.json();
-      store.set({ pendingFavorites: deserializeFavorites(favData.favorites || [], providerLookup) });
-    } catch {
-      store.set({ pendingFavorites: deserializeFavorites(config.models?.favorites || [], providerLookup) });
-    }
-
     store.set({
       settingsConfig: config,
       globalModelsConfig: globalModels,
       homeFolder: config.desk?.home_folder || null,
       currentPins: pinnedData.pins || [],
-      pendingDefaultModel: (() => {
-        const chatRaw = config.models?.chat;
-        if (!chatRaw) return '';
-        // 新格式 {id, provider} 或旧格式裸字符串
-        const chatId = typeof chatRaw === 'object' ? chatRaw.id : chatRaw;
-        const chatProv = typeof chatRaw === 'object' ? chatRaw.provider : providerLookup(chatId);
-        return chatProv ? `${chatProv}:${chatId}` : chatId;
-      })(),
     });
   } catch (err) {
     console.error('[settings] load failed:', err);

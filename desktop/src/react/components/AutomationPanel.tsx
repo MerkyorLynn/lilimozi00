@@ -22,19 +22,22 @@ export function AutomationPanel() {
   const currentAgentId = useStore(s => s.currentAgentId);
 
   const [jobs, setJobs] = useState<CronJob[]>([]);
-  const [favorites, setFavorites] = useState<string[]>([]);
+  const [availableModels, setAvailableModels] = useState<string[]>([]);
 
   const loadData = useCallback(async () => {
     try {
-      const [cronRes, favRes] = await Promise.all([
+      const [cronRes, modelsRes] = await Promise.all([
         hanaFetch('/api/desk/cron'),
-        hanaFetch('/api/favorites'),
+        hanaFetch('/api/models'),
       ]);
       const cronData = await cronRes.json();
-      let favs: string[] = [];
-      try { favs = (await favRes.json()).favorites || []; } catch {}
+      let modelIds: string[] = [];
+      try {
+        const modelsData = await modelsRes.json();
+        modelIds = (modelsData.models || []).map((m: { id: string }) => m.id);
+      } catch {}
       setJobs(cronData.jobs || []);
-      setFavorites(favs);
+      setAvailableModels(modelIds);
       updateBadge(cronData.jobs || []);
     } catch (err) {
       console.error('[automation] load failed:', err);
@@ -111,7 +114,7 @@ export function AutomationPanel() {
                 <AutomationItem
                   key={job.id}
                   job={job}
-                  favorites={favorites}
+                  availableModels={availableModels}
                   agentAvatarUrl={agentAvatarUrl}
                   agentName={agentName}
                   agentYuan={agentYuan}
@@ -135,7 +138,7 @@ function updateBadge(jobs: CronJob[]) {
 
 function AutomationItem({
   job,
-  favorites,
+  availableModels,
   agentAvatarUrl,
   agentName,
   agentYuan,
@@ -145,7 +148,7 @@ function AutomationItem({
   onUpdate,
 }: {
   job: CronJob;
-  favorites: string[];
+  availableModels: string[];
   agentAvatarUrl: string | null;
   agentName: string;
   agentYuan: string;
@@ -184,9 +187,9 @@ function AutomationItem({
 
   // 构建模型选项
   const modelOptions: string[] = [];
-  const modelSet = new Set(favorites);
+  const modelSet = new Set(availableModels);
   if (job.model && !modelSet.has(job.model)) modelOptions.push(job.model);
-  modelOptions.push(...favorites);
+  modelOptions.push(...availableModels);
 
   return (
     <div className={fp.autoItem}>
@@ -222,7 +225,7 @@ function AutomationItem({
             <span className={fp.autoItemExecutorName}>{agentName}</span>
           </div>
           <span className={fp.autoItemSchedule}>{cronToHuman(job.schedule)}</span>
-          {favorites.length > 0 && (
+          {availableModels.length > 0 && (
             <span className={fp.autoItemModelWrap}>
               <select
                 className={fp.autoItemModelSelect}

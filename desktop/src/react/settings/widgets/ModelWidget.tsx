@@ -1,23 +1,21 @@
 /**
  * MDW（模型下拉组件）的 React 版本
- * 支持按 provider 分组、favorites 标星、自定义输入
+ * 支持按 provider 分组、自定义输入
  */
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, useMemo } from 'react';
 import styles from '../Settings.module.css';
 
 interface ModelWidgetProps {
   providers: Record<string, { models?: string[]; base_url?: string }>;
-  favorites: Set<string>;
   value: string;
   onSelect: (modelId: string) => void;
-  onToggleFavorite?: (modelId: string, isFav: boolean) => void;
   placeholder?: string;
   lookupModelMeta?: (id: string) => any;
   formatContext?: (n: number) => string;
 }
 
 export function ModelWidget({
-  providers, favorites, value, onSelect, onToggleFavorite,
+  providers, value, onSelect,
   placeholder, lookupModelMeta, formatContext,
 }: ModelWidgetProps) {
   const t = window.t || ((k: string) => k);
@@ -45,10 +43,24 @@ export function ModelWidget({
 
   const query = search.toLowerCase();
 
+  // Collect all models from all providers
+  const allModels = useMemo(() => {
+    const models: string[] = [];
+    const seen = new Set<string>();
+    for (const p of Object.values(providers)) {
+      for (const m of (p.models || [])) {
+        if (!seen.has(m)) {
+          seen.add(m);
+          models.push(m);
+        }
+      }
+    }
+    return models;
+  }, [providers]);
+
   const handleCustomSubmit = () => {
     const val = customInput.trim();
     if (!val) return;
-    if (!favorites.has(val)) onToggleFavorite?.(val, true);
     onSelect(val);
     setCustomInput('');
     setOpen(false);
@@ -76,8 +88,7 @@ export function ModelWidget({
           onClick={(e) => e.stopPropagation()}
         />
         <div className={styles['mdw-options']}>
-          {/* 直接显示主模型列表 */}
-          {[...favorites]
+          {allModels
             .filter(mid => !query || mid.toLowerCase().includes(query))
             .map(mid => {
               const meta = lookupModelMeta?.(mid);

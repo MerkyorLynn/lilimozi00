@@ -1,7 +1,7 @@
 import React, { useState, useCallback, useEffect } from 'react';
 import { useSettingsStore, type ProviderSummary } from '../store';
 import { hanaFetch } from '../api';
-import { t, PROVIDER_PRESETS, favKey } from '../helpers';
+import { t, PROVIDER_PRESETS } from '../helpers';
 import { loadSettingsConfig } from '../actions';
 import { ProviderDetail } from './providers/ProviderDetail';
 import { AddCustomButton } from './providers/ProviderList';
@@ -9,7 +9,7 @@ import { OtherModelsSection } from './providers/OtherModelsSection';
 import styles from '../Settings.module.css';
 
 export function ProvidersTab() {
-  const { providersSummary, selectedProviderId, settingsConfig, pendingFavorites } = useSettingsStore();
+  const { providersSummary, selectedProviderId, settingsConfig } = useSettingsStore();
   const providers = settingsConfig?.providers || {};
   const [addingProvider, setAddingProvider] = useState(false);
 
@@ -46,9 +46,7 @@ export function ProvidersTab() {
   const renderRegistered = (id: string) => {
     const p = providersSummary[id];
     const preset = PROVIDER_PRESETS.find(pr => pr.value === id);
-    const favCount = (p.models || []).filter(m => pendingFavorites.has(favKey(id, m))).length
-      + (p.custom_models || []).filter(m => pendingFavorites.has(favKey(id, m))).length;
-    const totalCount = (p.models || []).length + (p.custom_models || []).length;
+    const modelCount = (p.models || []).length;
     return (
       <button
         key={id}
@@ -57,7 +55,7 @@ export function ProvidersTab() {
       >
         <span className={`${styles['pv-status-dot']}${p.has_credentials  ? ' ' + styles['on'] : ''}`} />
         <span className={styles['pv-list-item-name']}>{preset?.label || p.display_name || id}</span>
-        <span className={styles['pv-list-item-count']}>{favCount}/{totalCount}</span>
+        <span className={styles['pv-list-item-count']}>{modelCount}</span>
       </button>
     );
   };

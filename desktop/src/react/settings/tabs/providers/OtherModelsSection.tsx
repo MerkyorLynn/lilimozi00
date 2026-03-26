@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useSettingsStore } from '../../store';
 import { hanaFetch } from '../../api';
 import {
-  t, lookupModelMeta, formatContext, autoSaveGlobalModels, favKey, parseFavKey,
+  t, lookupModelMeta, formatContext, autoSaveGlobalModels,
 } from '../../helpers';
 import { loadSettingsConfig } from '../../actions';
 import { SelectWidget } from '../../widgets/SelectWidget';
@@ -63,7 +63,7 @@ function ToolModelTestBtn({ modelRef }: { modelRef: unknown }) {
 }
 
 export function OtherModelsSection({ providers }: { providers: Record<string, { models?: string[]; base_url?: string }> }) {
-  const { globalModelsConfig, pendingFavorites, showToast } = useSettingsStore();
+  const { globalModelsConfig, showToast } = useSettingsStore();
   const savedSearchKey = globalModelsConfig?.search?.api_key || '';
   const [searchApiKey, setSearchApiKey] = useState('');
   const [searchKeyEdited, setSearchKeyEdited] = useState(false);
@@ -99,18 +99,23 @@ export function OtherModelsSection({ providers }: { providers: Record<string, { 
     }
   };
 
-  // 工具模型配置可能是 {id, provider} 对象或裸字符串，统一转为 favKey 格式供 ModelWidget 使用
-  const toFavKeyValue = (raw: unknown): string => {
+  // 工具模型配置可能是 {id, provider} 对象或裸字符串，提取 model ID 供 ModelWidget 使用
+  const toModelId = (raw: unknown): string => {
     if (!raw) return '';
-    if (typeof raw === 'object' && (raw as any).id) {
-      const r = raw as { id: string; provider?: string };
-      return r.provider ? favKey(r.provider, r.id) : r.id;
-    }
+    if (typeof raw === 'object' && (raw as any).id) return (raw as { id: string }).id;
     return String(raw);
   };
 
-  const utilityVal = toFavKeyValue(globalModelsConfig?.models?.utility);
-  const utilityLargeVal = toFavKeyValue(globalModelsConfig?.models?.utility_large);
+  // 根据 model ID 反查所属 provider
+  const resolveProvider = (modelId: string): string | null => {
+    for (const [name, p] of Object.entries(providers)) {
+      if ((p.models || []).includes(modelId)) return name;
+    }
+    return null;
+  };
+
+  const utilityVal = toModelId(globalModelsConfig?.models?.utility);
+  const utilityLargeVal = toModelId(globalModelsConfig?.models?.utility_large);
 
   return (
     <>
@@ -120,11 +125,10 @@ export function OtherModelsSection({ providers }: { providers: Record<string, { 
           <div className={styles['pv-tool-model-row']}>
             <ModelWidget
               providers={providers}
-              favorites={pendingFavorites}
               value={utilityVal}
               onSelect={(mid) => {
-                const { provider, id } = parseFavKey(mid);
-                autoSaveGlobalModels({ models: { utility: provider ? { id, provider } : id } });
+                const provider = resolveProvider(mid);
+                autoSaveGlobalModels({ models: { utility: provider ? { id: mid, provider } : mid } });
               }}
               lookupModelMeta={lookupModelMeta}
               formatContext={formatContext}
@@ -138,11 +142,10 @@ export function OtherModelsSection({ providers }: { providers: Record<string, { 
           <div className={styles['pv-tool-model-row']}>
             <ModelWidget
               providers={providers}
-              favorites={pendingFavorites}
               value={utilityLargeVal}
               onSelect={(mid) => {
-                const { provider, id } = parseFavKey(mid);
-                autoSaveGlobalModels({ models: { utility_large: provider ? { id, provider } : id } });
+                const provider = resolveProvider(mid);
+                autoSaveGlobalModels({ models: { utility_large: provider ? { id: mid, provider } : mid } });
               }}
               lookupModelMeta={lookupModelMeta}
               formatContext={formatContext}

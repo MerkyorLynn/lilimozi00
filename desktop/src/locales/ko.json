@@ -579,7 +579,7 @@
       "addCustom": "커스텀 Provider 추가",
       "noKey": "미설정",
       "remove": "제거",
-      "deleteConfirm": "Provider {name}을(를) 삭제할까요? 연결된 모델과 즐겨찾기도 함께 제거돼요."
+      "deleteConfirm": "Provider {name}을(를) 삭제할까요? 연결된 모델도 함께 제거돼요."
     },
     "oauth": {
       "title": "간편 로그인",

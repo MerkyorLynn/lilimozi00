@@ -27,7 +27,7 @@ export function showError(message: string): void {
 
 export async function loadModels(): Promise<void> {
   try {
-    const res = await hanaFetch('/api/models/favorites');
+    const res = await hanaFetch('/api/models');
     const data = await res.json();
     const currentModelObj = (data.models || []).find((m: any) => m.isCurrent);
     useStore.setState({

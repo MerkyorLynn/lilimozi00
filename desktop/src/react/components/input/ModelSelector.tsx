@@ -28,7 +28,7 @@ export function ModelSelector({ models, disabled }: { models: Array<{ id: string
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ modelId, provider }),
       });
-      const res = await hanaFetch('/api/models/favorites');
+      const res = await hanaFetch('/api/models');
       const data = await res.json();
       useStore.setState({ models: data.models || [] });
     } catch (err) {
@@ -45,7 +45,7 @@ export function ModelSelector({ models, disabled }: { models: Array<{ id: string
       if (!groups[key]) groups[key] = [];
       groups[key].push(m);
     }
-    // 当前模型不在 favorites 时强制加入
+    // 当前模型不在列表中时强制加入
     if (current && !models.find(m => m.id === current.id && m.provider === current.provider)) {
       const key = current.provider || '';
       if (!groups[key]) groups[key] = [];

@@ -97,7 +97,7 @@ export async function loadModels({ hanaFetch, providerName, providerUrl, provide
   return { models: data.models || [] };
 }
 
-// ── Save model + favorites + utility models ──
+// ── Save model + utility models ──
 
 interface SaveModelParams {
   hanaFetch: HanaFetch;
@@ -124,16 +124,6 @@ export async function saveModel({ hanaFetch, selectedModel, fetchedModels, provi
     body: JSON.stringify({
       providers: { [providerName]: { models: modelIds } },
     }),
-  });
-
-  // Save favorites
-  const favs = [selectedModel];
-  if (selectedUtility && !favs.includes(selectedUtility)) favs.push(selectedUtility);
-  if (selectedUtilityLarge && !favs.includes(selectedUtilityLarge)) favs.push(selectedUtilityLarge);
-  await hanaFetch('/api/favorites', {
-    method: 'PUT',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ favorites: favs }),
   });
 
   // Save utility models to global preferences

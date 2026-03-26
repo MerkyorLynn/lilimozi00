@@ -64,10 +64,6 @@ export interface SettingsState {
   activeTab: string;
   ready: boolean;
 
-  // models
-  pendingFavorites: Set<string>;
-  pendingDefaultModel: string;
-
   // pins
   currentPins: string[];
 
@@ -117,10 +113,6 @@ export const useSettingsStore = create<SettingsStore>()((set, get) => ({
   // ui
   activeTab: 'agent',
   ready: false,
-
-  // models
-  pendingFavorites: new Set<string>(),
-  pendingDefaultModel: '',
 
   // pins
   currentPins: [],

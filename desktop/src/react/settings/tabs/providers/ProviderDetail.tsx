@@ -4,7 +4,6 @@ import { hanaFetch } from '../../api';
 import { t } from '../../helpers';
 import { OAuthCredentials } from './OAuthCredentials';
 import { ApiKeyCredentials } from './ApiKeyCredentials';
-import { FavoritedModels } from './FavoritedModels';
 import { ProviderModelList } from './ProviderModelList';
 import styles from '../../Settings.module.css';
 
@@ -38,7 +37,6 @@ export function ProviderDetail({ providerId, summary, providerConfig, isPresetSe
           onRefresh={onRefresh}
         />
       )}
-      <FavoritedModels providerId={providerId} summary={summary} />
       <ProviderModelList providerId={providerId} summary={summary} onRefresh={onRefresh} />
     </div>
   );

@@ -19,7 +19,7 @@ export function AgentTab() {
   const store = useSettingsStore();
   const {
     agents, currentAgentId, settingsConfig, currentPins,
-    pendingFavorites, pendingDefaultModel, showToast,
+    showToast,
     globalModelsConfig,
   } = store;
 
@@ -43,9 +43,20 @@ export function AgentTab() {
   const isViewingOther = settingsAgentId !== currentAgentId;
   const currentYuan = settingsConfig?.agent?.yuan || 'hanako';
 
-  const currentModel = settingsConfig?.models?.chat || pendingDefaultModel || '';
-  const modelOptions = [...pendingFavorites].map(mid => ({ value: mid, label: mid }));
-  if (currentModel && !pendingFavorites.has(currentModel)) {
+  const chatRaw = settingsConfig?.models?.chat;
+  const currentModel = typeof chatRaw === 'object' && chatRaw?.id ? chatRaw.id : (chatRaw || '');
+  const allProviderModels = (() => {
+    const seen = new Set<string>();
+    const result: string[] = [];
+    for (const p of Object.values(settingsConfig?.providers || {}) as { models?: string[] }[]) {
+      for (const m of (p.models || [])) {
+        if (!seen.has(m)) { seen.add(m); result.push(m); }
+      }
+    }
+    return result;
+  })();
+  const modelOptions = allProviderModels.map(mid => ({ value: mid, label: mid }));
+  if (currentModel && !allProviderModels.includes(currentModel)) {
     modelOptions.unshift({ value: currentModel, label: currentModel });
   }
 
@@ -159,7 +170,6 @@ export function AgentTab() {
               options={modelOptions}
               value={currentModel}
               onChange={async (modelId) => {
-                store.set({ pendingDefaultModel: modelId });
                 const partial: Record<string, unknown> = { models: { chat: modelId } };
                 const provs = settingsConfig?.providers || {};
                 for (const [name, p] of Object.entries(provs) as [string, { models?: string[] }][]) {

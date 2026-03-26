@@ -580,7 +580,7 @@
       "addCustom": "Add Custom Provider",
       "noKey": "Not configured",
       "remove": "Remove",
-      "deleteConfirm": "Delete provider {name}? Associated models and favorites will be removed."
+      "deleteConfirm": "Delete provider {name}? Associated models will be removed."
     },
     "oauth": {
       "title": "Quick Login",
