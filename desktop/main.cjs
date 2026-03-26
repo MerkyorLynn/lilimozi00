@@ -431,6 +431,10 @@ function monitorServer() {
         if (mainWindow && !mainWindow.isDestroyed()) {
           mainWindow.webContents.send("server-restarted", { port: serverPort });
         }
+        // 设置窗口也需要知道新端口（否则旧端口的 API 全部失败）
+        if (settingsWindow && !settingsWindow.isDestroyed()) {
+          settingsWindow.webContents.send("server-restarted", { port: serverPort });
+        }
       } catch (err) {
         console.error("[desktop] Server 重启失败:", err.message);
         writeCrashLog(`Server 重启失败: ${err.message}`);
@@ -754,10 +758,17 @@ const THEME_BG = {
 // ── 创建设置窗口 ──
 function createSettingsWindow(tab, theme) {
   if (settingsWindow && !settingsWindow.isDestroyed()) {
-    if (tab) settingsWindow.webContents.send("settings-switch-tab", tab);
-    settingsWindow.show();
-    settingsWindow.focus();
-    return;
+    // renderer 已崩溃：销毁旧窗口，走下方重建流程
+    if (settingsWindow.webContents.isCrashed()) {
+      console.warn("[desktop] settings renderer 已崩溃，重建窗口");
+      settingsWindow.destroy();
+      settingsWindow = null;
+    } else {
+      if (tab) settingsWindow.webContents.send("settings-switch-tab", tab);
+      settingsWindow.show();
+      settingsWindow.focus();
+      return;
+    }
   }
 
   settingsWindow = new BrowserWindow({
@@ -799,6 +810,15 @@ function createSettingsWindow(tab, theme) {
         shell.openExternal(url);
       }
     } catch {}
+  });
+
+  // renderer 崩溃恢复：标记为 null，下次打开时重建
+  settingsWindow.webContents.on("render-process-gone", (_event, details) => {
+    console.error(`[desktop] settings renderer 崩溃: ${details.reason} (code: ${details.exitCode})`);
+    if (settingsWindow && !settingsWindow.isDestroyed()) {
+      settingsWindow.destroy();
+    }
+    settingsWindow = null;
   });
 
   settingsWindow.on("closed", () => {

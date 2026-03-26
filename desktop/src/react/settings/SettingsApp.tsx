@@ -55,6 +55,18 @@ export function SettingsApp() {
     });
   }, [set]);
 
+  // Server 重启后用新端口重新加载数据
+  useEffect(() => {
+    if (!platform?.onServerRestarted) return;
+    platform.onServerRestarted((data: { port: number }) => {
+      const store = useSettingsStore.getState();
+      console.log('[settings] server restarted, new port:', data.port);
+      store.set({ serverPort: data.port });
+      loadAgents().catch(() => {});
+      loadSettingsConfig().catch(() => {});
+    });
+  }, []);
+
   const ActiveTab = TAB_COMPONENTS[activeTab] || AgentTab;
 
   return (

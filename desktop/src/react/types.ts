@@ -143,6 +143,7 @@ export interface PlatformApi {
   settingsChanged(event: string, payload?: unknown): void;
   onSettingsChanged(callback: (event: string, payload: unknown) => void): void;
   onSwitchTab?(callback: (tab: string) => void): void;
+  onServerRestarted?(callback: (data: { port: number }) => void): void;
   getFilePath?(file: File): string | null;
   startDrag?(filePaths: string | string[]): void;
   appReady(): void;

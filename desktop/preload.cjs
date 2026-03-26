@@ -54,6 +54,7 @@ contextBridge.exposeInMainWorld("hana", {
   settingsChanged: (type, data) => ipcRenderer.send("settings-changed", type, data),
   onSettingsChanged: (cb) => ipcRenderer.on("settings-changed", (_, type, data) => cb(type, data)),
   onSwitchTab: (cb) => ipcRenderer.on("settings-switch-tab", (_, tab) => cb(tab)),
+  onServerRestarted: (cb) => ipcRenderer.on("server-restarted", (_, data) => cb(data)),
   // 浏览器查看器窗口
   openBrowserViewer: () => ipcRenderer.invoke("open-browser-viewer", resolveTheme()),
   onBrowserUpdate: (cb) => ipcRenderer.on("browser-update", (_, data) => cb(data)),
