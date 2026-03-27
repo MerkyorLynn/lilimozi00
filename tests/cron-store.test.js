@@ -1,4 +1,4 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import { CronStore } from "../lib/desk/cron-store.js";
 import fs from "fs";
 import path from "path";
@@ -10,6 +10,15 @@ function makeTmpStore() {
     path.join(dir, "cron-jobs.json"),
     path.join(dir, "cron-runs"),
   );
+}
+
+/** 创建临时目录，返回 paths（不实例化 store，用于 _load 测试） */
+function makeTmpPaths() {
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), "cron-test-"));
+  return {
+    jobsPath: path.join(dir, "cron-jobs.json"),
+    runsDir: path.join(dir, "cron-runs"),
+  };
 }
 
 /** 构造本地时间的 Date（cron 字段匹配的是本地时区） */
@@ -189,5 +198,183 @@ describe("CronStore _calcNextRun", () => {
     const from = "2026-03-25T10:00:00.000Z";
     const next = store._calcNextRun("at", "2026-03-25T08:00:00.000Z", from);
     expect(next).toBeNull();
+  });
+});
+
+// ════════════════════════════════════════════
+//  addJob 输入验证
+// ════════════════════════════════════════════
+
+describe("CronStore addJob 输入验证", () => {
+  it("无效 type 抛错", () => {
+    const store = makeTmpStore();
+    expect(() => store.addJob({
+      type: "invalid",
+      schedule: 60000,
+      prompt: "test",
+    })).toThrow(/无效的 job type/);
+  });
+
+  it("every 类型 schedule < 60000 clamp 到 60000", () => {
+    const store = makeTmpStore();
+    const job = store.addJob({
+      type: "every",
+      schedule: 5000,
+      prompt: "test",
+    });
+    expect(job.schedule).toBe(60000);
+  });
+
+  it("at 类型 Invalid Date 抛错", () => {
+    const store = makeTmpStore();
+    expect(() => store.addJob({
+      type: "at",
+      schedule: "not-a-date",
+      prompt: "test",
+    })).toThrow(/无法解析为日期/);
+  });
+
+  it("at 类型过去时间抛错", () => {
+    const store = makeTmpStore();
+    expect(() => store.addJob({
+      type: "at",
+      schedule: "2020-01-01T00:00:00.000Z",
+      prompt: "test",
+    })).toThrow(/必须是未来时间/);
+  });
+});
+
+// ════════════════════════════════════════════
+//  updateJob 字段白名单
+// ════════════════════════════════════════════
+
+describe("CronStore updateJob 字段白名单", () => {
+  it("nextRunAt / id / createdAt 不可被覆盖", () => {
+    const store = makeTmpStore();
+    const job = store.addJob({
+      type: "every",
+      schedule: 3600000,
+      prompt: "test",
+    });
+    const origId = job.id;
+    const origCreatedAt = job.createdAt;
+    const origNextRunAt = job.nextRunAt;
+
+    store.updateJob(job.id, {
+      id: "hacked_id",
+      createdAt: "1999-01-01T00:00:00.000Z",
+      nextRunAt: "1999-01-01T00:00:00.000Z",
+      label: "new label",
+    });
+
+    const updated = store.getJob(origId);
+    expect(updated.id).toBe(origId);
+    expect(updated.createdAt).toBe(origCreatedAt);
+    expect(updated.nextRunAt).toBe(origNextRunAt);
+    expect(updated.label).toBe("new label");
+  });
+
+  it("schedule 变更触发 nextRunAt 重算", () => {
+    const store = makeTmpStore();
+    const job = store.addJob({
+      type: "every",
+      schedule: 3600000,
+      prompt: "test",
+    });
+    const origNextRunAt = job.nextRunAt;
+
+    // 改 schedule 为 2 小时
+    const updated = store.updateJob(job.id, { schedule: 7200000 });
+    expect(updated.schedule).toBe(7200000);
+    // nextRunAt 应该被重算（基于当前时间 + 7200000），跟原来不同
+    expect(updated.nextRunAt).not.toBe(origNextRunAt);
+  });
+});
+
+// ════════════════════════════════════════════
+//  _load 错误处理
+// ════════════════════════════════════════════
+
+describe("CronStore _load 错误处理", () => {
+  it("ENOENT（文件不存在）不报错，jobs 为空", () => {
+    const { jobsPath, runsDir } = makeTmpPaths();
+    // 不写任何文件，直接构造 store
+    const spy = vi.spyOn(console, "error");
+    const store = new CronStore(jobsPath, runsDir);
+    expect(store.size).toBe(0);
+    // ENOENT 走静默分支，不应 console.error
+    expect(spy).not.toHaveBeenCalled();
+    spy.mockRestore();
+  });
+
+  it("JSON 损坏 + .tmp 存在 → 从 .tmp 恢复", () => {
+    const { jobsPath, runsDir } = makeTmpPaths();
+    fs.mkdirSync(path.dirname(jobsPath), { recursive: true });
+
+    // 写损坏的主文件
+    fs.writeFileSync(jobsPath, "{ broken json !!!", "utf-8");
+
+    // 写有效的 .tmp 文件
+    const tmpData = {
+      jobs: [
+        { id: "job_1", type: "every", schedule: 3600000, prompt: "recovered", enabled: true, model: "", consecutiveErrors: 0 },
+      ],
+      nextNum: 2,
+    };
+    fs.writeFileSync(jobsPath + ".tmp", JSON.stringify(tmpData), "utf-8");
+
+    const spy = vi.spyOn(console, "error");
+    const store = new CronStore(jobsPath, runsDir);
+    expect(store.size).toBe(1);
+    expect(store.getJob("job_1").prompt).toBe("recovered");
+    // 应该有恢复日志
+    expect(spy).toHaveBeenCalledWith(expect.stringContaining("从 .tmp 恢复"));
+    spy.mockRestore();
+  });
+
+  it("every schedule < 60000 自动 clamp", () => {
+    const { jobsPath, runsDir } = makeTmpPaths();
+    fs.mkdirSync(path.dirname(jobsPath), { recursive: true });
+
+    const data = {
+      jobs: [
+        { id: "job_1", type: "every", schedule: 1000, prompt: "fast", enabled: true, model: "", consecutiveErrors: 0 },
+        { id: "job_2", type: "every", schedule: 120000, prompt: "ok", enabled: true, model: "", consecutiveErrors: 0 },
+      ],
+      nextNum: 3,
+    };
+    fs.writeFileSync(jobsPath, JSON.stringify(data), "utf-8");
+
+    const store = new CronStore(jobsPath, runsDir);
+    expect(store.getJob("job_1").schedule).toBe(60000);
+    expect(store.getJob("job_2").schedule).toBe(120000);
+  });
+
+  it("多次 listJobs 幂等（清洗后 _save，后续不再重复写）", () => {
+    const { jobsPath, runsDir } = makeTmpPaths();
+    fs.mkdirSync(path.dirname(jobsPath), { recursive: true });
+
+    const data = {
+      jobs: [
+        { id: "job_1", type: "every", schedule: 5000, prompt: "test", enabled: true, model: "" },
+      ],
+      nextNum: 2,
+    };
+    fs.writeFileSync(jobsPath, JSON.stringify(data), "utf-8");
+
+    const store = new CronStore(jobsPath, runsDir);
+    // 首次 _load 触发清洗 + _save
+    expect(store.getJob("job_1").schedule).toBe(60000);
+    expect(store.getJob("job_1").consecutiveErrors).toBe(0);
+
+    // 记录清洗后文件的 mtime
+    const stat1 = fs.statSync(jobsPath);
+
+    // 再次 listJobs（触发 _load），数据已干净，不应再 _save
+    // 用一个小延迟确保 mtime 能区分
+    const spy = vi.spyOn(store, "_save");
+    store.listJobs();
+    expect(spy).not.toHaveBeenCalled();
+    spy.mockRestore();
   });
 });
