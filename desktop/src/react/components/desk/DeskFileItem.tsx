@@ -176,6 +176,11 @@ export function DeskFileItem({
     const deleteLabel = bulkNames ? tFn('desk.ctx.deleteN', { n: bulkNames.length }) : tFn('desk.ctx.delete');
     items.push({ label: deleteLabel, danger: true, action: async () => {
       const names = bulkNames || [file.name];
+      // 删除确认：批量删除或单个文件都需确认
+      const confirmMsg = names.length > 1
+        ? (tFn('desk.ctx.confirmDeleteN', { n: names.length }) || `确定要删除这 ${names.length} 个文件吗？此操作不可恢复。`)
+        : (tFn('desk.ctx.confirmDelete', { name: names[0] }) || `确定要删除 "${names[0]}" 吗？此操作不可恢复。`);
+      if (!confirm(confirmMsg)) return;
       for (const n of names) await deskRemoveFile(n);
     } });
     onShowContextMenu({ position: { x: e.clientX, y: e.clientY }, items });

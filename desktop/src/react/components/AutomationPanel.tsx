@@ -66,6 +66,9 @@ export function AutomationPanel() {
   }, [loadData]);
 
   const removeJob = useCallback(async (jobId: string) => {
+    const t = window.t ?? ((p: string) => p);
+    const msg = t('automation.deleteConfirm') || '确定要删除这个定时任务吗？';
+    if (!confirm(msg)) return;
     try {
       await hanaFetch('/api/desk/cron', {
         method: 'POST',

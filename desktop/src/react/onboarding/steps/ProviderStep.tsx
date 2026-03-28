@@ -209,7 +209,7 @@ export function ProviderStep({
             <input
               className="ob-input"
               type={showKey ? 'text' : 'password'}
-              placeholder={t('onboarding.provider.keyPlaceholder')}
+              placeholder={apiKeyHint(selectedPreset) || t('onboarding.provider.keyPlaceholder')}
               value={apiKey}
               onChange={e => onApiKeyInput(e.target.value)}
               autoComplete="off"
@@ -249,4 +249,19 @@ export function ProviderStep({
       </div>
     </StepContainer>
   );
+}
+
+/** Provider-specific API key format hints */
+function apiKeyHint(preset: string | null): string {
+  switch (preset) {
+    case 'openai':      return 'sk-...';
+    case 'deepseek':    return 'sk-...';
+    case 'dashscope':   return 'sk-...';
+    case 'moonshot':    return 'sk-...';
+    case 'zhipu':       return '...  (zhipu open platform key)';
+    case 'groq':        return 'gsk_...';
+    case 'mistral':     return '...';
+    case 'siliconflow': return 'sk-...';
+    default:            return '';
+  }
 }

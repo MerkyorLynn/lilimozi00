@@ -28,41 +28,46 @@ export function ModelStep({
   const [selectedModel, setSelectedModel] = useState('');
   const [modelSearch, setModelSearch] = useState('');
   const [modelLoading, setModelLoading] = useState('');
+  const [modelError, setModelError] = useState(false);
   const [selectedUtility, setSelectedUtility] = useState('');
   const [selectedUtilityLarge, setSelectedUtilityLarge] = useState('');
 
   const modelsLoadedFor = useRef('');
 
-  // ── Load models on mount ──
-  useEffect(() => {
-    const doLoad = async () => {
-      if (preview) {
-        setFetchedModels([{ id: 'model-a' }, { id: 'model-b' }, { id: 'model-c' }]);
-        setModelLoading('');
+  // ── Load models ──
+  const loadModels = useCallback(async () => {
+    if (preview) {
+      setFetchedModels([{ id: 'model-a' }, { id: 'model-b' }, { id: 'model-c' }]);
+      setModelLoading('');
+      return;
+    }
+
+    setModelLoading(t('onboarding.model.loading'));
+    setModelError(false);
+    try {
+      const result = await loadModelsAction({ hanaFetch, providerName, providerUrl, providerApi, apiKey });
+      if (result.error) {
+        setModelLoading(result.error);
+        setModelError(true);
         return;
       }
-      if (modelsLoadedFor.current === providerName) return;
-
-      setModelLoading(t('onboarding.model.loading'));
-      try {
-        const result = await loadModelsAction({ hanaFetch, providerName, providerUrl, providerApi, apiKey });
-        if (result.error) {
-          setModelLoading(result.error);
-          return;
-        }
-        setFetchedModels(result.models);
-        setSelectedModel('');
-        setSelectedUtility('');
-        setSelectedUtilityLarge('');
-        modelsLoadedFor.current = providerName;
-        setModelLoading('');
-      } catch (err: unknown) {
-        const msg = err instanceof Error ? err.message : String(err);
-        setModelLoading(msg);
-      }
-    };
-    doLoad();
+      setFetchedModels(result.models);
+      setSelectedModel('');
+      setSelectedUtility('');
+      setSelectedUtilityLarge('');
+      modelsLoadedFor.current = providerName;
+      setModelLoading('');
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : String(err);
+      setModelLoading(msg);
+      setModelError(true);
+    }
   }, [preview, hanaFetch, providerName, providerUrl, providerApi, apiKey]);
+
+  useEffect(() => {
+    if (modelsLoadedFor.current === providerName) return;
+    loadModels();
+  }, [providerName, loadModels]);
 
   // ── Filtered models ──
   const filteredModels = modelSearch
@@ -104,7 +109,18 @@ export function ModelStep({
 
       <div className="model-list">
         {modelLoading ? (
-          <div className="model-empty">{modelLoading}</div>
+          <div className="model-empty">
+            {modelLoading}
+            {modelError && (
+              <button
+                className="ob-btn ob-btn-secondary"
+                style={{ marginTop: 8, fontSize: '0.8rem' }}
+                onClick={() => { modelsLoadedFor.current = ''; loadModels(); }}
+              >
+                {t('onboarding.model.retry') || '重试'}
+              </button>
+            )}
+          </div>
         ) : filteredModels.length === 0 ? (
           <div className="model-empty">{t('onboarding.model.empty')}</div>
         ) : (

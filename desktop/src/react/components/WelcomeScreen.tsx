@@ -241,13 +241,10 @@ function FolderPicker({ selectedFolder, cwdHistory, pendingNewSession }: {
     applyFolderAction(folder, pendingNewSession);
   }, [pendingNewSession]);
 
-  const handleButtonClick = useCallback(() => {
-    if (cwdHistory.length > 0) {
-      setShowHistory(prev => !prev);
-    } else {
-      handleBrowse();
-    }
-  }, [cwdHistory.length, handleBrowse]);
+  const handleToggleHistory = useCallback((e: React.MouseEvent) => {
+    e.stopPropagation();
+    setShowHistory(prev => !prev);
+  }, []);
 
   const handleSelectHistory = useCallback((folder: string) => {
     setShowHistory(false);
@@ -259,26 +256,36 @@ function FolderPicker({ selectedFolder, cwdHistory, pendingNewSession }: {
     ? `${t('input.workspace')}${folderName}`
     : t('input.selectWorkspace');
 
+  const hasHistory = cwdHistory.length > 0;
+
   return (
     <div
       className={`${styles.folderSelectWrap}${showHistory ? ` ${styles.folderSelectWrapShowHistory}` : ''}`}
       ref={wrapRef}
     >
-      <button
-        className={`${styles.folderSelectBtn}${selectedFolder ? ` ${styles.folderSelectBtnHasFolder}` : ''}`}
-        onClick={handleButtonClick}
-      >
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-          <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path>
-        </svg>
-        <span>{label}</span>
-        <svg className={styles.folderSwapIcon} width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-          <polyline points="17 1 21 5 17 9"></polyline>
-          <path d="M3 11V9a4 4 0 0 1 4-4h14"></path>
-          <polyline points="7 23 3 19 7 15"></polyline>
-          <path d="M21 13v2a4 4 0 0 1-4 4H3"></path>
-        </svg>
-      </button>
+      <div className={styles.folderSplitBtn}>
+        <button
+          className={`${styles.folderSelectBtn}${selectedFolder ? ` ${styles.folderSelectBtnHasFolder}` : ''}`}
+          onClick={handleBrowse}
+          title={t('input.selectFolder')}
+        >
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path>
+          </svg>
+          <span>{label}</span>
+        </button>
+        {hasHistory && (
+          <button
+            className={`${styles.folderDropdownToggle}${showHistory ? ` ${styles.folderDropdownToggleOpen}` : ''}`}
+            onClick={handleToggleHistory}
+            title={t('input.recentFolders') || 'Recent folders'}
+          >
+            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+              <polyline points="6 9 12 15 18 9"></polyline>
+            </svg>
+          </button>
+        )}
+      </div>
       {showHistory && (
         <FolderHistory
           cwdHistory={cwdHistory}

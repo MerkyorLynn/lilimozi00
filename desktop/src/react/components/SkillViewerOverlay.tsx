@@ -10,6 +10,7 @@ import { useStore } from '../stores';
 import { hanaFetch } from '../hooks/use-hana-fetch';
 
 import { getMdWithOpts } from '../utils/markdown';
+import { sanitizeHtml } from '../utils/sanitize';
 
 declare function t(key: string, vars?: Record<string, string | number>): string;
 
@@ -27,7 +28,7 @@ interface TreeItem {
   children?: TreeItem[];
 }
 
-const md = getMdWithOpts({ html: true, linkify: true, breaks: true });
+const md = getMdWithOpts({ html: false, linkify: true, breaks: true });
 
 export function SkillViewerOverlay() {
   const data = useStore(s => s.skillViewerData) as SkillInfo | null;
@@ -98,7 +99,7 @@ export function SkillViewerOverlay() {
         body = content.slice(fmMatch[0].length);
         description = parseFmDescription(fmMatch[1]);
       }
-      rendered = md.render(body);
+      rendered = sanitizeHtml(md.render(body));
     }
   }
 

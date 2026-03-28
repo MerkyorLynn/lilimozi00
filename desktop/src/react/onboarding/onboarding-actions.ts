@@ -34,7 +34,10 @@ export async function testConnection({ hanaFetch, providerUrl, providerApi, apiK
   if (data.ok) {
     return { ok: true, text: t('onboarding.provider.testSuccess') };
   }
-  return { ok: false, text: t('onboarding.provider.testFailed') };
+  // Show server error detail if available, otherwise fallback
+  const detail = data.error || data.message || '';
+  const failText = t('onboarding.provider.testFailed');
+  return { ok: false, text: detail ? `${failText}: ${detail}` : failText };
 }
 
 // ── Save provider ──
@@ -109,11 +112,20 @@ interface SaveModelParams {
 }
 
 export async function saveModel({ hanaFetch, selectedModel, fetchedModels, providerName, selectedUtility, selectedUtilityLarge }: SaveModelParams): Promise<void> {
-  // Save chat model
+  // Save chat model + auto-populate summarizer/compiler/utility if not separately configured.
+  // This prevents the "stuck after setup" issue where the server expects these fields.
+  const utilityModel = selectedUtility || selectedModel;
+  const models: Record<string, string> = {
+    chat: selectedModel,
+    summarizer: utilityModel,
+    compiler: utilityModel,
+    utility: utilityModel,
+  };
+
   await hanaFetch(`/api/agents/${AGENT_ID}/config`, {
     method: 'PUT',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ models: { chat: selectedModel } }),
+    body: JSON.stringify({ models }),
   });
 
   // Save model list to provider

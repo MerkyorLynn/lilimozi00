@@ -573,6 +573,14 @@
     opacity: 0.5;
 }
 
+/* 笺编辑器拖拽悬停反馈 */
+.editorDragOver {
+    border-color: rgba(var(--accent-rgb), 0.5);
+    border-style: dashed;
+    background: rgba(var(--accent-rgb), 0.04);
+    transition: border-color 0.15s, background 0.15s;
+}
+
 /* ── 书桌技能快捷区 ── */
 .skillsSection {
     padding: 0.4rem 0.75rem 0.5rem;

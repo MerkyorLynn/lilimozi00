@@ -4,6 +4,7 @@ import { hanaFetch, hanaUrl } from '../hooks/use-hana-fetch';
 import { formatSessionDate, injectCopyButtons, parseMoodFromContent } from '../utils/format';
 import { yuanFallbackAvatar } from '../utils/agent-helpers';
 import { getMd } from '../utils/markdown';
+import { sanitizeHtml } from '../utils/sanitize';
 import fp from './FloatingPanels.module.css';
 import chatStyles from './chat/Chat.module.css';
 
@@ -289,7 +290,7 @@ function DetailBody({ messages }: { messages: DetailMessage[] }) {
                     className="md-content"
                     dangerouslySetInnerHTML={{
                       __html: mdInstance
-                        ? mdInstance.render(text.replace(/<tool_code>[\s\S]*?<\/tool_code>\s*/g, ''))
+                        ? sanitizeHtml(mdInstance.render(text.replace(/<tool_code>[\s\S]*?<\/tool_code>\s*/g, '')))
                         : text,
                     }}
                   />

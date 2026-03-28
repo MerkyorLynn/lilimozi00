@@ -53,6 +53,9 @@ export function DeskDropZone({ children, onShowMenu }: { children: React.ReactNo
     // 如果 drop 目标在技能面板内，让技能面板自己处理，这里不复制文件
     if ((e.target as HTMLElement).closest('[data-desk-cwd-panel]')) return;
 
+    // 如果 drop 目标在笺编辑器内，让 JianEditor 自己处理（插入链接）
+    if ((e.target as HTMLElement).closest('[data-desk-editor-drop]')) return;
+
     const files = e.dataTransfer.files;
     const text = e.dataTransfer.getData('text/plain');
 

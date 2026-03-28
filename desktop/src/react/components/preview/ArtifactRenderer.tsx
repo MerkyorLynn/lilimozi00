@@ -7,6 +7,7 @@
 
 import { useEffect, useMemo, useRef } from 'react';
 import { renderMarkdown } from '../../utils/markdown';
+import { sanitizeHtml } from '../../utils/sanitize';
 import { parseCSV, injectCopyButtons } from '../../utils/format';
 import { fileIconSvg } from '../../utils/icons';
 import type { Artifact } from '../../types';
@@ -124,7 +125,7 @@ export function ArtifactRenderer({ artifact }: ArtifactRendererProps) {
       return (
         <iframe
           sandbox="allow-scripts"
-          srcDoc={artifact.content}
+          srcDoc={sanitizeHtml(artifact.content)}
         />
       );
 
@@ -170,7 +171,7 @@ export function ArtifactRenderer({ artifact }: ArtifactRendererProps) {
       return (
         <div
           className="preview-docx md-content"
-          dangerouslySetInnerHTML={{ __html: artifact.content }}
+          dangerouslySetInnerHTML={{ __html: sanitizeHtml(artifact.content) }}
         />
       );
 
@@ -178,7 +179,7 @@ export function ArtifactRenderer({ artifact }: ArtifactRendererProps) {
       return (
         <div
           className="preview-csv"
-          dangerouslySetInnerHTML={{ __html: artifact.content }}
+          dangerouslySetInnerHTML={{ __html: sanitizeHtml(artifact.content) }}
         />
       );
 

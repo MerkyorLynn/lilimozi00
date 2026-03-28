@@ -7,6 +7,7 @@
 import markdownit from 'markdown-it';
 import mk from '@traptitech/markdown-it-katex';
 import 'katex/dist/katex.min.css';
+import { sanitizeHtml } from './sanitize';
 
 type MarkdownIt = ReturnType<typeof markdownit>;
 
@@ -27,17 +28,19 @@ export function getMd(): MarkdownIt {
 
 const _cache = new Map<string, MarkdownIt>();
 
-/** 获取自定义选项的 md 实例（缓存复用） */
+/** 获取自定义选项的 md 实例（缓存复用，强制 html: false） */
 export function getMdWithOpts(opts: Parameters<typeof markdownit>[0]): MarkdownIt {
-  const key = JSON.stringify(opts);
+  // 安全：强制禁用 HTML 解析，防止 XSS
+  const safeOpts = typeof opts === 'object' ? { ...opts, html: false } : opts;
+  const key = JSON.stringify(safeOpts);
   let inst = _cache.get(key);
   if (!inst) {
-    inst = markdownit(opts);
+    inst = markdownit(safeOpts);
     _cache.set(key, inst);
   }
   return inst;
 }
 
 export function renderMarkdown(src: string): string {
-  return getMd().render(src);
+  return sanitizeHtml(getMd().render(src));
 }
