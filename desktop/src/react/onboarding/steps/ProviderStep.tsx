@@ -193,8 +193,8 @@ export function ProviderStep({
                 value={customApi}
                 onChange={e => onCustomInput(customName, customUrl, e.target.value)}
               >
-                <option value="openai-completions">OpenAI Compatible</option>
-                <option value="anthropic-messages">Anthropic Messages</option>
+                <option value="openai-completions">{t('onboarding.provider.apiOpenai') || 'OpenAI Compatible'}</option>
+                <option value="anthropic-messages">{t('onboarding.provider.apiAnthropic') || 'Anthropic Messages'}</option>
               </select>
             </div>
           </div>

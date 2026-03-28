@@ -1,4 +1,5 @@
 import { create } from 'zustand';
+import { useShallow } from 'zustand/react/shallow';
 import { createConnectionSlice, type ConnectionSlice } from './connection-slice';
 import { createSessionSlice, type SessionSlice } from './session-slice';
 import { createStreamingSlice, type StreamingSlice } from './streaming-slice';
@@ -54,6 +55,8 @@ export const useStore = create<StoreState>()((set, _get, _api) => ({
   ...createActivitySlice(set),
   ...createBridgeSlice(set),
 }));
+
+export { useShallow };
 
 // Re-export slice types
 export type {

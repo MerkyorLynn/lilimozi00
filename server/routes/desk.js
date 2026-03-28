@@ -23,15 +23,29 @@ function realPath(p) {
 
 /** 安全路径校验：target 必须在 baseDir 内部（解析 symlink 后比较） */
 function isInsidePath(target, baseDir) {
+  // Reject null bytes and decode URI components for normalization
+  if (typeof target !== "string" || target.includes("\0")) return false;
+  let normalized;
+  try { normalized = decodeURIComponent(target); } catch { normalized = target; }
+  // NFC normalization for Unicode consistency
+  normalized = normalized.normalize("NFC");
+
   const base = realPath(baseDir);
   if (!base) return false;
-  const resolved = realPath(target);
-  if (resolved) return resolved === base || resolved.startsWith(base + path.sep);
+  const resolved = realPath(normalized);
+  if (resolved) {
+    // Double-check with path.relative to ensure no '..' escape
+    const rel = path.relative(base, resolved);
+    if (rel.startsWith("..") || path.isAbsolute(rel)) return false;
+    return true;
+  }
   // 路径不存在（mkdir / rename 目标）：解析父目录 + 保留 basename
-  const parentResolved = realPath(path.dirname(target));
+  const parentResolved = realPath(path.dirname(normalized));
   if (!parentResolved) return false;
-  const full = path.join(parentResolved, path.basename(target));
-  return full === base || full.startsWith(base + path.sep);
+  const full = path.join(parentResolved, path.basename(normalized));
+  const rel = path.relative(base, full);
+  if (rel.startsWith("..") || path.isAbsolute(rel)) return false;
+  return true;
 }
 
 /** 校验 dir 覆盖：仅允许 engine 已知的根目录（解析 symlink 后比较） */

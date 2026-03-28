@@ -44,6 +44,29 @@ export function createChatRoute(engine, hub, { upgradeWebSocket }) {
   const DISCONNECT_ABORT_GRACE_MS = 15_000;
   const sessionState = new Map(); // sessionPath -> shared stream state
 
+  // ── Per-client rate limiting (token bucket) ──
+  const _wsRateLimits = new WeakMap();
+  const RATE_TOKENS = 5;       // max burst
+  const RATE_REFILL_MS = 10000; // refill interval
+
+  function checkRateLimit(ws) {
+    let bucket = _wsRateLimits.get(ws);
+    if (!bucket) {
+      bucket = { tokens: RATE_TOKENS, lastRefill: Date.now() };
+      _wsRateLimits.set(ws, bucket);
+    }
+    const now = Date.now();
+    const elapsed = now - bucket.lastRefill;
+    if (elapsed >= RATE_REFILL_MS) {
+      const refills = Math.floor(elapsed / RATE_REFILL_MS);
+      bucket.tokens = Math.min(RATE_TOKENS, bucket.tokens + refills * RATE_TOKENS);
+      bucket.lastRefill += refills * RATE_REFILL_MS;
+    }
+    if (bucket.tokens <= 0) return false;
+    bucket.tokens--;
+    return true;
+  }
+
   function cancelDisconnectAbort() {
     if (disconnectAbortTimer) {
       clearTimeout(disconnectAbortTimer);
@@ -88,11 +111,25 @@ export function createChatRoute(engine, hub, { upgradeWebSocket }) {
         hasError: false,
         titleRequested: false,
         titlePreview: "",
+        lastActivity: Date.now(),
         ...createSessionStreamState(),
       });
     }
-    return sessionState.get(sessionPath);
+    const ss = sessionState.get(sessionPath);
+    if (ss) ss.lastActivity = Date.now();
+    return ss;
   }
+
+  // ── Idle session state eviction (every 60s, evict entries idle > 5 min) ──
+  const _sessionEvictTimer = setInterval(() => {
+    const now = Date.now();
+    for (const [sp, ss] of sessionState) {
+      if (!ss.isStreaming && now - (ss.lastActivity || 0) > 300_000) {
+        sessionState.delete(sp);
+      }
+    }
+  }, 60_000);
+  if (_sessionEvictTimer.unref) _sessionEvictTimer.unref();
 
   const clients = new Set();
 
@@ -618,6 +655,11 @@ export function createChatRoute(engine, hub, { upgradeWebSocket }) {
             }
 
             if (msg.type === "prompt" && (msg.text || msg.images?.length)) {
+              // Rate limit check
+              if (!checkRateLimit(ws)) {
+                wsSend(ws, { type: "error", message: "Rate limit exceeded. Please wait before sending another message." });
+                return;
+              }
               // 图片校验：最多 10 张，单张 ≤ 20MB，仅允许常见图片 MIME
               if (msg.images?.length) {
                 const ALLOWED_MIME = new Set(["image/png", "image/jpeg", "image/gif", "image/webp"]);

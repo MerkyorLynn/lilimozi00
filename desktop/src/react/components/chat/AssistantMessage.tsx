@@ -62,6 +62,47 @@ export const AssistantMessage = memo(function AssistantMessage({ message, showAv
     }).catch(() => {}); // clipboard may reject without focus/permission — non-critical
   }, [blocks]);
 
+  const handleRetry = useCallback(() => {
+    const state = useStore.getState();
+    const sessionPath = state.currentSessionPath;
+    if (!sessionPath) return;
+    const chatSession = state.chatSessions[sessionPath];
+    if (!chatSession?.items) return;
+    // Find the last user message before this assistant message
+    let lastUserText = '';
+    for (let i = chatSession.items.length - 1; i >= 0; i--) {
+      const item = chatSession.items[i];
+      if (item.type === 'message' && item.data.id === message.id) {
+        for (let j = i - 1; j >= 0; j--) {
+          const prev = chatSession.items[j];
+          if (prev.type === 'message' && prev.data.role === 'user' && prev.data.text) {
+            lastUserText = prev.data.text;
+            break;
+          }
+        }
+        break;
+      }
+    }
+    if (!lastUserText) return;
+    const ws = (window as any).__hanaWs;
+    if (ws?.readyState === 1) {
+      ws.send(JSON.stringify({ type: 'prompt', text: lastUserText, sessionPath }));
+    }
+  }, [message.id]);
+
+  const isLastAssistant = useMemo(() => {
+    const state = useStore.getState();
+    const sessionPath = state.currentSessionPath;
+    if (!sessionPath) return false;
+    const items = state.chatSessions[sessionPath]?.items;
+    if (!items) return false;
+    for (let i = items.length - 1; i >= 0; i--) {
+      const item = items[i];
+      if (item.type === 'message' && item.data.role === 'assistant') return item.data.id === message.id;
+    }
+    return false;
+  }, [message.id, blocks]);
+
   return (
     <div className={`${styles.messageGroup} ${styles.messageGroupAssistant}`}>
       {showAvatar && (
@@ -94,7 +135,7 @@ export const AssistantMessage = memo(function AssistantMessage({ message, showAv
           <ContentBlockView key={`block-${i}`} block={block} agentName={displayName} yuan={displayYuan} />
         ))}
       </div>
-      <button className={`${styles.msgCopyBtn}${copied ? ` ${styles.msgCopyBtnCopied}` : ''}`} onClick={handleCopy} title={t('common.copyText')}>
+      <button className={`${styles.msgCopyBtn}${copied ? ` ${styles.msgCopyBtnCopied}` : ''}`} onClick={handleCopy} title={t('common.copyText')} aria-label={t('common.copyText')}>
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
           {copied
             ? <polyline points="20 6 9 17 4 12" />
@@ -105,6 +146,14 @@ export const AssistantMessage = memo(function AssistantMessage({ message, showAv
           }
         </svg>
       </button>
+      {isLastAssistant && (
+        <button className={styles.msgCopyBtn} onClick={handleRetry} title={t('chat.retry') || 'Retry'} aria-label={t('chat.retry') || 'Retry'}>
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+            <polyline points="1 4 1 10 7 10" />
+            <path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10" />
+          </svg>
+        </button>
+      )}
     </div>
   );
 });

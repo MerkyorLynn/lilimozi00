@@ -6,7 +6,7 @@
  */
 
 import { memo, useRef, useEffect, useState, useCallback } from 'react';
-import { useStore } from '../../stores';
+import { useStore, useShallow } from '../../stores';
 import { UserMessage } from './UserMessage';
 import { AssistantMessage } from './AssistantMessage';
 import type { ChatListItem } from '../../stores/chat-types';
@@ -65,9 +65,10 @@ function PanelHost() {
 // ── Panel：一个 session 的原生滚动容器 ──
 
 const SCROLL_THRESHOLD = 300;
+const _emptyItems: ChatListItem[] = [];
 
 const Panel = memo(function Panel({ path, active }: { path: string; active: boolean }) {
-  const items = useStore(s => s.chatSessions[path]?.items || []);
+  const items = useStore(s => s.chatSessions[path]?.items ?? _emptyItems);
   const isSessionStreaming = useStore(s => s.streamingSessions.includes(path));
   const ref = useRef<HTMLDivElement>(null);
   const contentRef = useRef<HTMLDivElement>(null);

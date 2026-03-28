@@ -97,11 +97,11 @@ export function AutomationPanel() {
   if (activePanel !== 'automation') return null;
 
   return (
-    <div className={fp.floatingPanel} id="automationPanel">
+    <div className={fp.floatingPanel} id="automationPanel" role="dialog" aria-modal="true" aria-label="Automation Panel">
       <div className={fp.floatingPanelInner}>
         <div className={fp.floatingPanelHeader}>
           <h2 className={fp.floatingPanelTitle}>{(window.t ?? ((p: string) => p))('automation.title')}</h2>
-          <button className={fp.floatingPanelClose} onClick={close}>
+          <button className={fp.floatingPanelClose} onClick={close} aria-label="Close">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
               <line x1="18" y1="6" x2="6" y2="18" />
               <line x1="6" y1="6" x2="18" y2="18" />
@@ -203,6 +203,7 @@ function AutomationItem({
       <button
         className={'hana-toggle' + (job.enabled ? ' on' : '')}
         title={job.enabled ? 'Disable' : 'Enable'}
+        aria-label={job.enabled ? 'Disable automation' : 'Enable automation'}
         onClick={() => onToggle(job.id)}
       />
       <div className={fp.autoItemInfo}>

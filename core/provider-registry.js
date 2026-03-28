@@ -13,8 +13,52 @@
 import fs from "fs";
 import path from "path";
 import YAML from "js-yaml";
+import crypto from "crypto";
+import os from "os";
 import { safeReadYAMLSync } from "../shared/safe-fs.js";
 import { fromRoot } from "../shared/hana-root.js";
+
+// ── API Key encryption helpers ──
+// Derive a machine-local encryption key from hostname + username
+const _ENC_ALGO = "aes-256-gcm";
+const _ENC_SALT = "hanako-provider-keys-v1";
+
+function _deriveKey() {
+  const material = `${os.hostname()}:${os.userInfo().username}`;
+  return crypto.pbkdf2Sync(material, _ENC_SALT, 100000, 32, "sha256");
+}
+
+function _encryptKey(plaintext) {
+  if (!plaintext) return plaintext;
+  try {
+    const key = _deriveKey();
+    const iv = crypto.randomBytes(12);
+    const cipher = crypto.createCipheriv(_ENC_ALGO, key, iv);
+    let enc = cipher.update(plaintext, "utf8", "hex");
+    enc += cipher.final("hex");
+    const tag = cipher.getAuthTag().toString("hex");
+    return `enc:${iv.toString("hex")}:${tag}:${enc}`;
+  } catch {
+    return plaintext; // fallback: store as-is
+  }
+}
+
+function _decryptKey(stored) {
+  if (!stored || typeof stored !== "string" || !stored.startsWith("enc:")) return stored;
+  try {
+    const parts = stored.split(":");
+    if (parts.length !== 4) return stored;
+    const [, ivHex, tagHex, encHex] = parts;
+    const key = _deriveKey();
+    const decipher = crypto.createDecipheriv(_ENC_ALGO, key, Buffer.from(ivHex, "hex"));
+    decipher.setAuthTag(Buffer.from(tagHex, "hex"));
+    let dec = decipher.update(encHex, "hex", "utf8");
+    dec += decipher.final("utf8");
+    return dec;
+  } catch {
+    return stored; // can't decrypt — return as-is (may be plaintext from before encryption)
+  }
+}
 
 const _defaultModels = JSON.parse(
   fs.readFileSync(fromRoot("lib", "default-models.json"), "utf-8"),
@@ -162,6 +206,14 @@ export class ProviderRegistry {
       "# Hanako 供应商配置（全局，跨 agent 共享）\n" +
       "# 由设置页面管理\n\n";
     const data = { ...existing, providers };
+    // Encrypt API keys before persisting
+    if (data.providers) {
+      for (const prov of Object.values(data.providers)) {
+        if (prov && typeof prov === "object" && prov.api_key && !prov.api_key.startsWith("enc:")) {
+          prov.api_key = _encryptKey(prov.api_key);
+        }
+      }
+    }
     const yamlStr = header + YAML.dump(data, {
       indent: 2,
       lineWidth: -1,
@@ -172,6 +224,7 @@ export class ProviderRegistry {
     const tmpPath = ymlPath + ".tmp";
     fs.writeFileSync(tmpPath, yamlStr, "utf-8");
     fs.renameSync(tmpPath, ymlPath);
+    try { fs.chmodSync(ymlPath, 0o600); } catch {}
   }
 
   /**
@@ -349,7 +402,7 @@ export class ProviderRegistry {
 
     const plugin = this._plugins.get(providerId);
     return {
-      apiKey: uc.api_key || "",
+      apiKey: _decryptKey(uc.api_key) || "",
       baseUrl: uc.base_url || plugin?.defaultBaseUrl || "",
       api: uc.api || plugin?.defaultApi || "",
     };

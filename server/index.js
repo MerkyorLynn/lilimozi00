@@ -141,9 +141,10 @@ app.use("*", async (c, next) => {
   c.header("Access-Control-Allow-Headers", "Content-Type, Authorization");
   if (c.req.method === "OPTIONS") return c.text("", 204);
 
-  // 验证 token（WebSocket 升级请求通过 URL 参数传 token，在 chat.js 中校验）
+  // 验证 token：优先 Authorization header，WebSocket 升级请求允许 URL 参数传 token
+  const isUpgrade = (c.req.header("upgrade") || "").toLowerCase() === "websocket";
   const token = c.req.header("authorization")?.replace("Bearer ", "")
-    || c.req.query("token");
+    || (isUpgrade ? c.req.query("token") : undefined);
   if (token !== SERVER_TOKEN) return c.json({ error: "forbidden" }, 403);
 
   await next();
@@ -269,7 +270,10 @@ try {
     const url = new URL(req.url ?? "/", `http://${req.headers.host}`);
     if (url.pathname !== "/internal/browser") return; // let Hono handle it
 
-    const token = url.searchParams.get("token");
+    // Prefer Sec-WebSocket-Protocol header for auth; fall back to URL param (localhost only)
+    const protoHeader = req.headers["sec-websocket-protocol"] || "";
+    const protoToken = protoHeader.split(",").map(s => s.trim()).find(s => s.startsWith("token."))?.slice(6);
+    const token = protoToken || url.searchParams.get("token");
     if (token !== SERVER_TOKEN) {
       socket.destroy();
       return;
@@ -284,7 +288,10 @@ try {
     bm.setWsTransport(ws);
 
     // 调试：记录浏览器 WS 消息往返
-    const _bwsLog = (line) => { try { fs.appendFileSync(path.join(os.homedir(), ".hanako", "browser-ws.log"), `${new Date().toISOString()} ${line}\n`); } catch {} };
+    const _bwsLogPath = path.join(os.homedir(), ".hanako", "browser-ws.log");
+    let _bwsStream;
+    try { _bwsStream = fs.createWriteStream(_bwsLogPath, { flags: "a" }); } catch {}
+    const _bwsLog = (line) => { try { _bwsStream?.write(`${new Date().toISOString()} ${line}\n`); } catch {} };
     _bwsLog("browser WS connected");
     const origSend = ws.send.bind(ws);
     ws.send = function(data, ...args) {
