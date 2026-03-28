@@ -10,7 +10,7 @@ import { useStore } from '../stores';
 import { isImageFile } from '../utils/format';
 import { hanaFetch } from '../hooks/use-hana-fetch';
 import { useI18n } from '../hooks/use-i18n';
-import { ensureSession, loadSessions } from '../stores/session-actions';
+import { ensureSession, loadSessions, showSidebarToast } from '../stores/session-actions';
 import { getWebSocket } from '../services/websocket';
 import type { ThinkingLevel } from '../stores/model-slice';
 import { TodoDisplay } from './input/TodoDisplay';
@@ -241,7 +241,11 @@ function InputAreaInner() {
     }
 
     const hasFiles = attachedFiles.length > 0;
-    if ((!text && !hasFiles && !docContextAttached && !useStore.getState().quotedSelection) || !connected) return;
+    const hasSendable = !!(text || hasFiles || docContextAttached || useStore.getState().quotedSelection);
+    if (!hasSendable || !connected) {
+      if (!connected && hasSendable) showSidebarToast(t('chat.needWsConnection'));
+      return;
+    }
     if (isStreaming) return;
     if (sending) return;
     setSending(true);

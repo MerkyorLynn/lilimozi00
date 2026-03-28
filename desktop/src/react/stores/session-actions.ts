@@ -213,22 +213,38 @@ export async function ensureSession(): Promise<boolean> {
   const s = useStore.getState();
   if (!s.pendingNewSession) return true;
 
-  try {
-    const body: Record<string, any> = { memoryEnabled: s.memoryEnabled };
-    if (s.selectedFolder) {
-      body.cwd = s.selectedFolder;
-    }
-    if (s.selectedAgentId && s.selectedAgentId !== s.currentAgentId) {
-      body.agentId = s.selectedAgentId;
-    }
+  const body: Record<string, any> = { memoryEnabled: s.memoryEnabled };
+  if (s.selectedFolder) {
+    body.cwd = s.selectedFolder;
+  }
+  if (s.selectedAgentId && s.selectedAgentId !== s.currentAgentId) {
+    body.agentId = s.selectedAgentId;
+  }
 
-    const res = await hanaFetch('/api/sessions/new', {
+  try {
+    // 不用 hanaFetch：5xx 时需读取 JSON 里的 error 文案（如「没有可用的模型」），hanaFetch 会在 res.ok 前抛错
+    const { serverPort, serverToken } = useStore.getState();
+    const headers: Record<string, string> = { 'Content-Type': 'application/json' };
+    if (serverToken) headers.Authorization = `Bearer ${serverToken}`;
+    const res = await fetch(`http://127.0.0.1:${serverPort}/api/sessions/new`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers,
       body: JSON.stringify(body),
+      signal: AbortSignal.timeout(30_000),
     });
-    const data = await res.json();
+    let data: Record<string, any> = {};
+    try {
+      data = await res.json();
+    } catch { /* 非 JSON */ }
+    if (!res.ok) {
+      const errMsg = typeof data.error === 'string' ? data.error : data?.error?.message;
+      showSidebarToast(errMsg || (window.t?.('error.fetchServerError') ?? 'Server error'), 5000);
+      console.error('[session] create failed:', res.status, data);
+      return false;
+    }
     if (data.error) {
+      const errMsg = typeof data.error === 'string' ? data.error : data.error?.message;
+      showSidebarToast(errMsg || (window.t?.('error.unknown') ?? 'Error'), 5000);
       console.error('[session] create failed:', data.error);
       return false;
     }
@@ -289,6 +305,7 @@ export async function ensureSession(): Promise<boolean> {
     return true;
   } catch (err) {
     console.error('[session] create failed:', err);
+    showSidebarToast(window.t?.('error.fetchServerError') ?? 'Server error', 5000);
     return false;
   }
 }

@@ -87,7 +87,8 @@
     "steer": "Steer",
     "stop": "Stop",
     "browserScreenshot": "Browser screenshot",
-    "compacting": "Compacting context"
+    "compacting": "Compacting context",
+    "needWsConnection": "Disconnected from the assistant. Wait for reconnect or tap Reconnect in the status bar."
   },
   "time": {
     "justNow": "Just now",
@@ -987,6 +988,7 @@
     "jianPlaceholder": "Write something to tell the assistant how to handle files in this folder...",
     "emptyTitle": "Desk is empty",
     "emptyHint": "The desk is the assistant's patrol workspace and the default directory for every chat.\nSet a folder in settings.",
+    "noDeskRoot": "Desk root is not set. Open Settings → Work and choose a folder.",
     "goToSettings": "Go to Settings",
     "fileLabel": "file",
     "openWithDefault": "Open with default app",

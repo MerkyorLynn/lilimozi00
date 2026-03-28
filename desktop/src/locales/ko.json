@@ -86,7 +86,8 @@
     "steer": "방향 전환",
     "stop": "중지",
     "browserScreenshot": "브라우저 스크린샷",
-    "compacting": "컨텍스트 압축 중"
+    "compacting": "컨텍스트 압축 중",
+    "needWsConnection": "어시스턴트와 연결이 끊겼어요. 재연결을 기다리거나 상태 표시줄에서 다시 연결을 눌러 주세요"
   },
   "time": {
     "justNow": "방금",
@@ -973,6 +974,7 @@
     "jianPlaceholder": "이 폴더의 파일을 어떻게 처리할지 어시스턴트에게 알려주세요...",
     "emptyTitle": "책상이 비어 있어요",
     "emptyHint": "책상은 어시스턴트의 순찰 작업 공간이자 모든 대화의 기본 디렉토리예요.\n설정에서 폴더를 지정하세요.",
+    "noDeskRoot": "책상 루트가 설정되지 않았어요. 설정 → 작업에서 폴더를 지정해 주세요.",
     "goToSettings": "설정으로 이동",
     "fileLabel": "파일",
     "openWithDefault": "기본 앱으로 열기",

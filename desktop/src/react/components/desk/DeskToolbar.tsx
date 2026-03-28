@@ -12,6 +12,7 @@ import {
   type SortMode,
   type CtxMenuState,
 } from './desk-types';
+import { showSidebarToast } from '../../stores/session-actions';
 import s from './Desk.module.css';
 
 // ── Open in Finder 按钮 ──
@@ -19,7 +20,11 @@ import s from './Desk.module.css';
 export function DeskOpenButton() {
   const handleClick = useCallback(() => {
     const s = useStore.getState();
-    if (!s.deskBasePath) return;
+    if (!s.deskBasePath) {
+      const tFn = window.t ?? ((p: string) => p);
+      showSidebarToast(tFn('desk.noDeskRoot'));
+      return;
+    }
     const target = s.deskCurrentPath
       ? s.deskBasePath + '/' + s.deskCurrentPath
       : s.deskBasePath;
