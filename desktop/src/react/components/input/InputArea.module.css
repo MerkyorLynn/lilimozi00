@@ -45,8 +45,9 @@
 .plan-mode-btn {
     display: inline-flex;
     align-items: center;
-    gap: 0.3rem;
-    padding: 0.2rem 0.55rem;
+    justify-content: center;
+    gap: 0;
+    padding: 0.28rem 0.4rem;
     font-family: inherit;
     font-size: 0.72rem;
     color: var(--text-muted);

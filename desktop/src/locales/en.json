@@ -115,7 +115,7 @@
     "selectFolder": "Select folder",
     "workspace": "Workspace: ",
     "selectWorkspace": "Select workspace",
-    "planMode": "Use computer",
+    "planMode": "Allow terminal & writes (off = read-only)",
     "deskContext": "With desk context",
     "pastedImage": "Pasted image",
     "docContext": "With document",
@@ -328,29 +328,29 @@
       "failed": "💭 {name} can't seem to remember"
     },
     "bash": {
-      "running": "💻 {name} is tiptoeing through your computer",
-      "done": "💻 {name} is done with the computer",
-      "failed": "💻 {name}'s computer didn't cooperate"
+      "running": "Running command…",
+      "done": "Command finished",
+      "failed": "Command failed"
     },
     "read": {
-      "running": "📖 {name} is flipping through a file",
-      "done": "📖 {name} done flipping",
-      "failed": "📖 {name} found nothing there"
+      "running": "Reading file…",
+      "done": "Read",
+      "failed": "Read failed"
     },
     "write": {
-      "running": "✏️ {name} is putting pen to paper",
-      "done": "✏️ {name} ink's down",
-      "failed": "✏️ {name} ran out of ink"
+      "running": "Writing file…",
+      "done": "Written",
+      "failed": "Write failed"
     },
     "edit": {
-      "running": "✏️ {name} is making edits",
-      "done": "✏️ {name} all fixed up",
-      "failed": "✏️ {name} made a bit of a mess"
+      "running": "Editing file…",
+      "done": "Edited",
+      "failed": "Edit failed"
     },
     "edit-diff": {
-      "running": "✏️ {name} is making edits",
-      "done": "✏️ {name} all fixed up",
-      "failed": "✏️ {name} made a bit of a mess"
+      "running": "Editing file…",
+      "done": "Edited",
+      "failed": "Edit failed"
     },
     "glob": {
       "running": "🔍 {name} is looking for files",
@@ -383,9 +383,9 @@
       "failed": "📎 Couldn't hand it over"
     },
     "browser": {
-      "running": "🌐 {name} is browsing the web",
-      "done": "🌐 {name} done with the browser",
-      "failed": "🌐 {name}'s browser wouldn't cooperate"
+      "running": "Browser…",
+      "done": "Browser done",
+      "failed": "Browser failed"
     },
     "_fallback": {
       "running": "🔧 {name} is busy working…",

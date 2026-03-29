@@ -2,7 +2,7 @@
  * StreamBufferManager — per-session 流式事件节流缓冲
  *
  * WS 事件到达时写入 buffer（纯 JS 对象，不触发 React），
- * 每 FLUSH_INTERVAL ms 批量 flush 到 Zustand store。
+ * 每 FLUSH_INTERVAL ms 批量 flush 到 Zustand store（过大会像「一顿一顿」，过小会加重 markdown-it 解析负担）。
  *
  * 设计为 singleton，不依赖 React 组件生命周期。
  * app-ws-shim 直接调用 streamBufferManager.handle(msg)。
@@ -15,7 +15,8 @@ import { cleanMoodText } from '../utils/message-parser';
 
 /* eslint-disable @typescript-eslint/no-explicit-any -- 流式消息 handle(msg) 接收动态 JSON */
 
-const FLUSH_INTERVAL = 200;
+/** 主文本流式刷新间隔。200ms 约 5fps 偏钝；50ms 约 20fps，更接近 Cursor 类编辑器的顺滑感 */
+const FLUSH_INTERVAL = 50;
 
 interface Buffer {
   sessionPath: string;
@@ -184,7 +185,7 @@ class StreamBufferManager {
 
       case 'thinking_delta':
         buf.thinkingAcc += msg.delta || '';
-        // thinking 内容不频繁 flush，等 end 或下一个 text_delta
+        this.scheduleFlush(buf);
         break;
 
       case 'thinking_end':
@@ -220,6 +221,7 @@ class StreamBufferManager {
 
       case 'xing_text':
         buf.xingAcc += msg.delta || '';
+        this.scheduleFlush(buf);
         break;
 
       case 'xing_end':

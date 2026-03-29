@@ -114,7 +114,7 @@
     "selectFolder": "フォルダを選択",
     "workspace": "ワークスペース：",
     "selectWorkspace": "ワークスペースを選択",
-    "planMode": "コンピュータを使う",
+    "planMode": "ターミナルと書き込みを許可（オフは読み取り専用）",
     "deskContext": "デスクのコンテキスト付き",
     "pastedImage": "貼り付け画像",
     "docContext": "ドキュメント付き",
@@ -327,29 +327,29 @@
       "failed": "💭 {name} どうしても思い出せない"
     },
     "bash": {
-      "running": "💻 {name} はそっとパソコンを触っている",
-      "done": "💻 {name} パソコン使い終わった",
-      "failed": "💻 {name} パソコンが言うことを聞かなかった"
+      "running": "コマンド実行中…",
+      "done": "コマンド完了",
+      "failed": "コマンド失敗"
     },
     "read": {
-      "running": "📖 {name} はファイルをめくっている",
-      "done": "📖 {name} 読み終わった",
-      "failed": "📖 {name} 見つからなかった"
+      "running": "ファイル読み込み…",
+      "done": "読み込み完了",
+      "failed": "読み込み失敗"
     },
     "write": {
-      "running": "✏️ {name} はペンを走らせている",
-      "done": "✏️ {name} 書き上げた",
-      "failed": "✏️ {name} インクが切れた"
+      "running": "ファイル書き込み…",
+      "done": "書き込み完了",
+      "failed": "書き込み失敗"
     },
     "edit": {
-      "running": "✏️ {name} は手直ししている",
-      "done": "✏️ {name} 直った",
-      "failed": "✏️ {name} 直そうとしたら余計に…"
+      "running": "ファイル編集中…",
+      "done": "編集完了",
+      "failed": "編集失敗"
     },
     "edit-diff": {
-      "running": "✏️ {name} は手直ししている",
-      "done": "✏️ {name} 直った",
-      "failed": "✏️ {name} 直そうとしたら余計に…"
+      "running": "ファイル編集中…",
+      "done": "編集完了",
+      "failed": "編集失敗"
     },
     "glob": {
       "running": "🔍 {name} はファイルを探している",
@@ -382,9 +382,9 @@
       "failed": "📎 ファイルを渡せなかった"
     },
     "browser": {
-      "running": "🌐 {name} はブラウザを操作している",
-      "done": "🌐 {name} ブラウザ操作おわり",
-      "failed": "🌐 {name} ブラウザが言うことを聞かない"
+      "running": "ブラウザ…",
+      "done": "ブラウザ終了",
+      "failed": "ブラウザ失敗"
     },
     "_fallback": {
       "running": "🔧 {name} は作業中…",

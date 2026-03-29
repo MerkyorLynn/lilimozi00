@@ -602,6 +602,18 @@
     flex-shrink: 0;
 }
 
+/* 命令/路径主行：等宽 + 省略，接近 IDE 工具输出 */
+.toolDescMono {
+    flex: 1;
+    min-width: 0;
+    flex-shrink: 1;
+    font-family: var(--font-mono);
+    font-size: 0.76rem;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
 .toolDetail {
     flex: 1;
     min-width: 0;

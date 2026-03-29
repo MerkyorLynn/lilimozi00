@@ -114,7 +114,7 @@
     "selectFolder": "選擇工作資料夾",
     "workspace": "工作空間：",
     "selectWorkspace": "選擇工作空間",
-    "planMode": "操作電腦",
+    "planMode": "允許讀寫與終端（關閉為唯讀）",
     "deskContext": "看著書桌說",
     "pastedImage": "貼上圖片",
     "docContext": "看著文件說",
@@ -327,29 +327,29 @@
       "failed": "💭 {name} 怎麼也想不起來"
     },
     "bash": {
-      "running": "💻 {name} 正在小心翼翼地用你的電腦",
-      "done": "💻 {name} 用完電腦了",
-      "failed": "💻 {name} 電腦沒聽話"
+      "running": "終端執行中…",
+      "done": "命令已執行",
+      "failed": "命令失敗"
     },
     "read": {
-      "running": "📖 {name} 正在翻閱檔案",
-      "done": "📖 {name} 翻完了",
-      "failed": "📖 {name} 沒翻到"
+      "running": "讀取檔案…",
+      "done": "已讀取",
+      "failed": "讀取失敗"
     },
     "write": {
-      "running": "✏️ {name} 提筆寫字中",
-      "done": "✏️ {name} 落筆了",
-      "failed": "✏️ {name} 筆沒墨了"
+      "running": "寫入檔案…",
+      "done": "已寫入",
+      "failed": "寫入失敗"
     },
     "edit": {
-      "running": "✏️ {name} 提筆改字中",
-      "done": "✏️ {name} 改好了",
-      "failed": "✏️ {name} 越改越亂了"
+      "running": "編輯檔案…",
+      "done": "已編輯",
+      "failed": "編輯失敗"
     },
     "edit-diff": {
-      "running": "✏️ {name} 提筆改字中",
-      "done": "✏️ {name} 改好了",
-      "failed": "✏️ {name} 越改越亂了"
+      "running": "編輯檔案…",
+      "done": "已編輯",
+      "failed": "編輯失敗"
     },
     "glob": {
       "running": "🔍 {name} 正在找檔案",
@@ -382,9 +382,9 @@
       "failed": "📎 檔案沒放好"
     },
     "browser": {
-      "running": "🌐 {name} 正在操作瀏覽器",
-      "done": "🌐 {name} 操作完了",
-      "failed": "🌐 {name} 瀏覽器不聽使喚"
+      "running": "瀏覽器…",
+      "done": "瀏覽器已結束",
+      "failed": "瀏覽器失敗"
     },
     "_fallback": {
       "running": "🔧 {name} 正在忙碌中…",

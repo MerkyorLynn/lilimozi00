@@ -74,13 +74,15 @@ const ToolIndicator = memo(function ToolIndicator({ tool }: { tool: ToolCall }) 
   const detail = extractToolDetail(tool.name, tool.args);
   const label = getToolLabel(tool.name, tool.done ? 'done' : 'running');
 
+  // 有命令/路径时只展示事实行，避免每步重复「用你的电脑」类叙事（对齐 Cursor 工具条）
+  const primary = detail?.trim() ? detail : label;
+
   // 如果 args 里有 tag 类型信息（如 agent 名）
   const tag = tool.args?.agentId as string | undefined;
 
   return (
     <div className={styles.toolIndicator} data-tool={tool.name} data-done={String(tool.done)}>
-      <span className={styles.toolDesc}>{label}</span>
-      {detail && <span className={styles.toolDetail}>{detail}</span>}
+      <span className={`${styles.toolDesc}${detail?.trim() ? ` ${styles.toolDescMono}` : ''}`}>{primary}</span>
       {tag && <span className={styles.toolTag}>{tag}</span>}
       {tool.done ? (
         <span className={`${styles.toolStatus} ${tool.success ? styles.toolStatusDone : styles.toolStatusFailed}`}>

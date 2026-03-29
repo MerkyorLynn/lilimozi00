@@ -23,16 +23,18 @@ export function PlanModeButton({ enabled, onToggle }: {
     }
   }, [enabled, onToggle]);
 
+  const label = t('input.planMode');
   return (
     <button
+      type="button"
       className={`${styles['plan-mode-btn']}${!enabled ? ` ${styles.active}` : ''}`}
-      title={t('input.planMode')}
+      title={label}
+      aria-label={label}
       onClick={handleClick}
     >
-      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
         <polyline points="4 17 10 11 4 5" /><line x1="12" y1="19" x2="20" y2="19" />
       </svg>
-      <span className={styles['plan-mode-label']}>{t('input.planMode')}</span>
     </button>
   );
 }
